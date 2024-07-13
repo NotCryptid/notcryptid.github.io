@@ -72,8 +72,10 @@
                 const elements = svgDoc.querySelectorAll('[rx]');
 
                 elements.forEach(el => {
-                    const rxValue = el.getAttribute('rx');
-                    el.setAttribute('ry', rxValue);
+                    if (!el.hasAttribute('ry')) {
+                        const rxValue = el.getAttribute('rx');
+                        el.setAttribute('ry', rxValue);
+                    }
                 });
 
                 const modifiedSVG = serializer.serializeToString(svgDoc);
