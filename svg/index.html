@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link
+      rel="shortcut icon"
+      href="https://raw.githubusercontent.com/NotCryptid/notcryptid.github.io/main/svg/svg_fix_logo.png"
+    />
+    <title>Scratch SVG Fixer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #000000;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            background: #410047;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        input[type="file"] {
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #d400ff;
+            color: white;
+        }
+        button:disabled {
+            background-color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Fix yer rounded corners so they appear correctly.</h1>
+        <input type="file" id="fileInput" accept=".svg">
+        <button id="modifyButton" disabled>Process File</button>
+    </div>
+    <script>
+        document.getElementById('fileInput').addEventListener('change', handleFileSelect, false);
+        document.getElementById('modifyButton').addEventListener('click', modifySVG, false);
+
+        let selectedFile;
+
+        function handleFileSelect(event) {
+            selectedFile = event.target.files[0];
+            if (selectedFile) {
+                document.getElementById('modifyButton').disabled = false;
+            } else {
+                document.getElementById('modifyButton').disabled = true;
+            }
+        }
+
+        function modifySVG() {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const parser = new DOMParser();
+                const serializer = new XMLSerializer();
+                const svgDoc = parser.parseFromString(event.target.result, 'image/svg+xml');
+                const elements = svgDoc.querySelectorAll('[rx]');
+
+                elements.forEach(el => {
+                    if (!el.hasAttribute('ry')) {
+                        const rxValue = el.getAttribute('rx');
+                        el.setAttribute('ry', rxValue);
+                    }
+                });
+
+                const modifiedSVG = serializer.serializeToString(svgDoc);
+                downloadModifiedSVG(modifiedSVG, selectedFile.name);
+            };
+            reader.readAsText(selectedFile);
+        }
+
+        function downloadModifiedSVG(content, originalFileName) {
+            const extensionIndex = originalFileName.lastIndexOf('.');
+            const fileNameWithoutExtension = originalFileName.substring(0, extensionIndex);
+            const extension = originalFileName.substring(extensionIndex);
+            const newFileName = `${fileNameWithoutExtension} (fixed)${extension}`;
+
+            const blob = new Blob([content], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = newFileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    </script>
+</body>
+</html>
