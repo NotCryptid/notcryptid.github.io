@@ -33,7 +33,7 @@
             justify-content: space-between;
             padding: 10px 20px;
             background-color: #25002F;
-            width: 100%;
+            width: 99%;
             position: fixed;
             top: 0;
             left: 0;
@@ -46,16 +46,18 @@
             color: white;
             background-color: #3A0048;
             border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 16px;
+            padding: 9px 20px;
+            border-radius: 8px;
+            font-size: 18px;
+            margin: 5px;
+            font-family: 'SF Pro', sans-serif;
         }
         .content-section {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            width: 80%;
-            max-width: 1200px;
+            width: 85%;
+            max-width: 1400px;
         }
         .download {
             text-align: center;
@@ -67,7 +69,7 @@
             color: white;
             background-color: #8200B3;
             text-decoration: none;
-            border-radius: 5px;
+            border-radius: 8px;
             margin: 5px;
         }
         .download a:hover {
@@ -78,84 +80,106 @@
             padding: 10px;
             background-color: #25002F;
             margin-top: 20px;
-            width: 100%;
+            width: 99%;
+            font-size: 16px;
+        }
+        p {
+            font-size: 42px;
+        }
+        ul {
+            list-style: none;
+            padding-left: 0;
+            text-align: center;
+        }
+        ul li {
+            position: relative;
+            padding-right: 20px;
+            text-align: left;
+            display: inline-block;
+        }
+        .funny-dot {
+            font-size: 1.4em;
+            font-weight: bold;
         }
     </style>
+    <script>
+        function updateDownloadLinks() {
+            const version = document.querySelector('.version-selector').value;
+            document.getElementById('download-windows').href = `RealityX-Setup-${version}.exe`;
+            document.getElementById('download-macos').href = `RealityX-Setup-${version}.dmg`;
+        }
+    </script>
 </head>
 <body>
     <div class="top-bar">
         <img src="logo.png" alt="RealityX Logo">
     </div>
     
-    <div class="window" style="margin-top: 80px; width: 800px; text-align: center;">
+    <div class="window" style="margin-top: 150px; width: 1282px; text-align: center;">
         <img src="logo.png" alt="RealityX Logo">
-        <p>RealityX is a high-performance game engine designed for realistic physics, stunning visuals, and seamless cross-platform development.</p>
+        <p style="font-size: 31px">RealityX is a high-performance game engine designed for realistic physics, stunning visuals, and seamless cross-platform development.</p>
     </div>
     
     <div class="content-section">
         <div class="window">
-            <img src="screenshot1.png" alt="Main RealityX interface with a simple scene loaded and some assets in the explorer" width="400">
+            <img src="screenshot1.png" alt="Main RealityX interface with a simple scene loaded and some assets in the explorer" width="600">
         </div>
-        <div class="window" style="width: 400px;">
+        <div class="window" style="width: 600px;">
             <p>Built for ease of use, with simple to use integrations for multiplayer, mod support, Ray Tracing and Virtual Reality.</p>
         </div>
     </div>
     
     <div class="content-section">
-        <div class="window" style="width: 400px;">
+        <div class="window" style="width: 600px;">
             <p>Designed with the end user in mind. Every game made with RealityX uses top of the line DLSS/FSR Upscaling technology to keep framerates high.</p>
         </div>
         <div class="window">
-            <img src="screenshot2.png" alt="Floor 2 from the game Ascend with a side by side comparison of frames per second with DLSS 4 disabled and enabled" width="400">
+            <img src="screenshot2.png" alt="Floor 2 from the game Ascend with a side by side comparison of frames per second with DLSS 4 disabled and enabled" width="600">
         </div>
     </div>
 
     <div class="content-section">
         <div class="window">
-            <img src="screenshot3.png" alt="Basic Swift code" width="400">
+            <img src="screenshot3.png" alt="Basic Swift code" width="600">
         </div>
-        <div class="window" style="width: 400px;">
+        <div class="window" style="width: 600px;">
             <p>Powered by Swift, for the power of C++, with none of the hassle.</p>
         </div>
     </div>
 
-    <div class="content-section">
-        <div class="window" style="width: 800px; text-align: center;">
-            <h2>Minimum System Requirements</h2>
-            <h3>Windows</h3>
-            <ul>
-                <li>OS: Windows 11</li>
-                <li>CPU: Ryzen 7 7800X3D / Intel i9-13900K</li>
-                <li>RAM: 16GB</li>
-                <li>GPU: RTX 50 Series GPU</li>
-                <li>Storage: 10GB available space</li>
-            </ul>
-            <h3>macOS</h3>
-            <ul>
-                <li>OS: macOS Sonoma or newer</li>
-                <li>CPU: Apple M1 Pro / M2 / M3</li>
-                <li>RAM: 16GB</li>
-                <li>GPU: Integrated Apple Silicon GPU</li>
-                <li>Storage: 10GB available space</li>
-            </ul>
-        </div>
+    <div class="window" style="width: 1282px; text-align: center">
+        <h2>Minimum System Requirements</h2>
+        <h3>Windows</h3>
+        <ul>
+            <li><span class="funny-dot">• </span> OS: Windows 11</li><br>
+            <li><span class="funny-dot">• </span> CPU: Ryzen 7 7800X3D / Intel i9-13900K</li><br>
+            <li><span class="funny-dot">• </span> RAM: 16GB</li><br>
+            <li><span class="funny-dot">• </span> GPU: Nvidia RTX 50 Series GPU</li><br>
+            <li><span class="funny-dot">• </span> Storage: 10GB available space</li><br>
+        </ul>
+        <h3>macOS</h3>
+        <ul>
+            <li><span class="funny-dot">• </span> OS: macOS Sonoma or newer</li><br>
+            <li><span class="funny-dot">• </span> CPU: Apple M1 Pro / M2 / M3</li><br>
+            <li><span class="funny-dot">• </span> RAM: 16GB</li><br>
+            <li><span class="funny-dot">• </span> GPU: Integrated Apple Silicon GPU</li><br>
+            <li><span class="funny-dot">• </span> Storage: 10GB available space</li><br>
+        </ul>
     </div>
-    
-    <div class="window" style="width: 800px; text-align: center;">
+
+    <div class="window" style="width: 1282px; text-align: center;">
         <div class="download">
-            <select class="version-selector">
+            <select class="version-selector" onchange="updateDownloadLinks()">
                 <option value="latest">Latest Version</option>
-                <option value="1.0">Version 1.0</option>
-                <option value="0.9">Version 0.9</option>
-                <option value="0.8">Version 0.8</option>
+                <option value="0.1">Version 0.1</option>
             </select>
-            <a href="RealityX-Setup.exe" download>Download for Windows</a>
-            <a href="RealityX-Setup.dmg" download>Download for macOS</a>
+            <a id="download-windows" href="RealityX-Setup-latest.exe" download>Download for Windows</a>
+            <a id="download-macos" href="RealityX-Setup-latest.dmg" download>Download for macOS</a>
         </div>
     </div>
     
     <footer>
-        <p>&copy; 2025 RealityX. All rights reserved.</p>
+        <p style="font-size: 16px">&copy; 2025 RealityX. All rights reserved.</p>
     </footer>
 </body>
 </html>
