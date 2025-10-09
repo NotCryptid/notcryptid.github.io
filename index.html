@@ -1,14 +1,156 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>super sigma site</title>
-    <body>
-        <h1>hello welcom to my site</h1>
-        <h1>i'll make something here lator</h1>
-        <h1>for now here are some cool things</h1>
-        <a href="https://cryptid.is-a.dev/svg">svg rounded corner fixer for scratch</a>
-    </body>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Cryptids Emporium</title>
+<link rel="icon" href="./main-assets/favicon.png" type="image/png" sizes="32x32" />
+<style>
+  :root {
+    --side-margin: 20px;
+    --gap: 8px;
+    --press-duration: 260ms;
+    --press-ease: cubic-bezier(.2,.7,.2,1.2);
+
+    --frame-size: min(
+      calc(100vw - (2 * var(--side-margin))),
+      calc((100vh - (2 * var(--side-margin)) - (4 * var(--gap))) / 5)
+    );
+
+    --radius: 18px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
+
+  body {
+    background: url("./main-assets/Background.png") center top/100% auto fixed no-repeat;
+    padding: var(--side-margin);
+    display: grid;
+    place-items: center;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  }
+
+  .stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--gap);
+    width: min(calc(100vw - (2 * var(--side-margin))), calc(var(--frame-size) * 2));
+  }
+
+  .pfp,
+  .frame,
+  .btn {
+    width: calc(var(--frame-size) * 2);
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+    overflow: hidden;
+    transform: translateZ(0);
+    background-size: contain;
+  }
+
+  .pfp {
+    height: calc(var(--frame-size) * 2 / 2.29);
+    width: calc(var(--frame-size) * 2 / 2.29);
+    background-size: cover;
+  }
+
+  .about-me {
+    aspect-ratio: 2.29 / 1;
+  }
+
+  .separator {
+    aspect-ratio: 12.62 / 1;
+  }
+
+  .btn {
+    aspect-ratio: 4.11 / 1;
+  }
+
+  .pfp { border-radius: 9999px; }
+
+  .frame,
+  .btn { border-radius: var(--radius); }
+
+  .frame::after,
+  .btn::after,
+  .pfp::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    box-shadow:
+      inset 0 0 0 1px rgba(255,255,255,.28),
+      0 10px 30px rgba(0,0,0,.25);
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  .btn {
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    text-decoration: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    will-change: transform;
+  }
+
+  .btn:hover {
+    transform: scale(1.015);
+    transition: transform 140ms ease;
+  }
+
+  .btn.pressed {
+    animation: press-bounce var(--press-duration) var(--press-ease);
+  }
+
+  @keyframes press-bounce {
+    0%   { transform: scale(1); }
+    30%  { transform: scale(.94); }
+    60%  { transform: scale(1.03); }
+    100% { transform: scale(1); }
+  }
+</style>
 </head>
+<body>
+  <div class="stack">
+    <div class="pfp" style='background-image:url("./main-assets/pfp.png")'></div>
+
+    <div class="frame about-me" style='background-image:url("./main-assets/about-me.svg")'></div>
+    <div class="frame separator" style='background-image:url("./main-assets/separator.svg")'></div>
+
+    <a class="btn"
+       href="https://github.com/NotCryptid/MicroOS"
+       style='background-image:url("./main-assets/microos.svg")'></a>
+
+    <a class="btn"
+       href="https://github.com/Cryptidium"
+       style='background-image:url("./main-assets/cryptidium.svg")'></a>
+  </div>
+
+<script>
+  const delay = ms => new Promise(r => setTimeout(r, ms));
+  document.querySelectorAll('.btn').forEach(el => {
+    el.addEventListener('click', async e => {
+      e.preventDefault();
+      if (el.classList.contains('pressed')) return;
+      el.classList.add('pressed');
+      await delay(220);
+      window.location.href = el.href;
+      await delay(80);
+      el.classList.remove('pressed');
+    }, { passive: false });
+
+    el.addEventListener('pointerdown', () => el.classList.add('pressed'), { passive: true });
+    el.addEventListener('pointerup',   () => el.classList.remove('pressed'), { passive: true });
+    el.addEventListener('pointerleave',() => el.classList.remove('pressed'), { passive: true });
+  });
+</script>
+</body>
 </html>
