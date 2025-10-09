@@ -37,9 +37,14 @@
 
   @media (orientation: portrait) {
     body {
-      background-size: 100% auto;
+      background-size: auto 100%;
     }
   }
+    @media (orientation: landscape) {
+        body {
+        background-size: 100% auto;
+        }
+    }
 
   .stack {
     display: flex;
