@@ -29,7 +29,7 @@
 
   body {
     background: url("./main-assets/Background.png") center top/auto 100% fixed no-repeat;
-    padding: var(--side-margin);
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     display: grid;
     place-items: center;
     font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
