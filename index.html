@@ -24,96 +24,20 @@
 
   html, body {
     height: 100%;
-    height: 100vh;
-    height: 100dvh; /* Dynamic viewport height for Safari */
     margin: 0;
-    padding: 0;
-    overflow-x: hidden;
   }
 
   body {
+    background: url("./main-assets/Background.png") center top/auto 100% fixed no-repeat;
     padding: var(--side-margin);
     display: grid;
     place-items: center;
     font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-    min-height: 100vh;
-    min-height: 100dvh; /* Dynamic viewport height for Safari */
-  }
-
-  @media (max-width: 768px) and (orientation: portrait) {
-    body {
-      background: url("./main-assets/Background-480p.png") center center/100% auto no-repeat;
-    }
-  }
-  
-  @media (max-width: 1024px) and (orientation: landscape) {
-    body {
-      background: url("./main-assets/Background-720p.png") center center/auto 100% no-repeat;
-    }
-  }
-
-  @media (min-width: 769px) and (max-width: 1024px) and (orientation: portrait) {
-    body {
-      background: url("./main-assets/Background-1080p.png") center center/100% auto no-repeat;
-    }
-  }
-
-  @media (min-width: 1025px) {
-    body {
-      background: url("./main-assets/Background-1440p.png") center center/auto 100% no-repeat;
-    }
-  }
-
-  @media (min-width: 1921px) {
-    body {
-      background: url("./main-assets/Background-4k.png") center center/auto 100% no-repeat;
-    }
-  }
-
-  body {
-    background: url("./main-assets/Background.png") center center/auto 100% no-repeat;
-  }
-
-  /* Safari-specific fixes */
-  @supports (-webkit-touch-callout: none) {
-    html {
-      height: -webkit-fill-available;
-    }
-    
-    body {
-      background-attachment: scroll;
-      min-height: -webkit-fill-available;
-      height: -webkit-fill-available;
-      position: relative;
-    }
-    
-    body::before {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: url("./main-assets/Background.png") center center/auto 100% no-repeat;
-      z-index: -1;
-    }
-  }
-  
-  /* Additional Safari mobile fixes */
-  @media screen and (-webkit-min-device-pixel-ratio: 2) and (orientation: portrait) {
-    body::before {
-      background-size: auto 140%;
-    }
-  }
-  
-  @media screen and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
-    body::before {
-      background-size: 100% auto;
-    }
   }
 
   @media (orientation: portrait) {
     body {
+      background-size: 100% auto;
       background-size: auto 100%;
     }
   }
@@ -151,7 +75,6 @@
 
   .about-me {
     aspect-ratio: 2.29 / 1;
-    margin-top: calc(var(--gap) * 2);
   }
 
   .separator {
