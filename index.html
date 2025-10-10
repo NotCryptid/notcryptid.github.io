@@ -27,8 +27,41 @@
     margin: 0;
   }
 
+  @media (max-width: 768px) and (orientation: portrait) {
+    body {
+      background: url("./main-assets/Background-480p.png") center center/100% auto no-repeat;
+    }
+  }
+  
+  @media (max-width: 1024px) and (orientation: landscape) {
+    body {
+      background: url("./main-assets/Background-720p.png") center center/auto 100% no-repeat;
+    }
+  }
+
+  @media (min-width: 769px) and (max-width: 1024px) and (orientation: portrait) {
+    body {
+      background: url("./main-assets/Background-1080p.png") center center/100% auto no-repeat;
+    }
+  }
+
+  @media (min-width: 1025px) {
+    body {
+      background: url("./main-assets/Background-1440p.png") center center/auto 100% no-repeat;
+    }
+  }
+
+  @media (min-width: 1921px) {
+    body {
+      background: url("./main-assets/Background-4k.png") center center/auto 100% no-repeat;
+    }
+  }
+
   body {
-    background: url("./main-assets/Background.png") center top/auto 100% fixed no-repeat;
+    background: url("./main-assets/Background.png") center center/auto 100% no-repeat;
+  }
+
+  body {
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     display: grid;
     place-items: center;
