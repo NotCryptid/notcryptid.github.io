@@ -150,8 +150,8 @@
   /* Liquid Glass Effect */
   .liquid-glass {
     position: relative;
-    backdrop-filter: blur(12px) saturate(1.4);
-    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+    backdrop-filter: blur(2px) saturate(1.2);
+    -webkit-backdrop-filter: blur(2px) saturate(1.2);
   }
 
   .liquid-glass-overlay {
@@ -160,9 +160,9 @@
     border-radius: inherit;
     background: linear-gradient(
       135deg,
-      rgba(255, 255, 255, 0.15) 0%,
-      rgba(255, 255, 255, 0.05) 50%,
-      rgba(255, 255, 255, 0.1) 100%
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(255, 255, 255, 0.02) 50%,
+      rgba(255, 255, 255, 0.04) 100%
     );
     pointer-events: none;
     z-index: 1;
@@ -173,12 +173,23 @@
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    background: linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.35) 0%,
-      rgba(255, 255, 255, 0.08) 40%,
-      transparent 60%
-    );
+    background: 
+      linear-gradient(
+        145deg,
+        rgba(255, 255, 255, 0.2) 0%,
+        rgba(255, 255, 255, 0.04) 40%,
+        transparent 60%
+      ),
+      linear-gradient(
+        90deg,
+        rgba(255, 100, 100, 0.15) 0%,
+        rgba(255, 200, 100, 0.12) 15%,
+        rgba(200, 255, 100, 0.1) 30%,
+        transparent 50%,
+        rgba(100, 200, 255, 0.1) 70%,
+        rgba(150, 100, 255, 0.12) 85%,
+        rgba(255, 100, 200, 0.15) 100%
+      );
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask-composite: exclude;
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -187,18 +198,47 @@
     pointer-events: none;
   }
 
+  .liquid-glass-refraction {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: 
+      linear-gradient(
+        135deg,
+        rgba(255, 120, 120, 0.14) 0%,
+        transparent 30%
+      ),
+      linear-gradient(
+        225deg,
+        rgba(120, 180, 255, 0.14) 0%,
+        transparent 30%
+      ),
+      linear-gradient(
+        315deg,
+        rgba(180, 120, 255, 0.14) 0%,
+        transparent 25%
+      ),
+      linear-gradient(
+        45deg,
+        rgba(120, 255, 180, 0.06) 0%,
+        transparent 25%
+      );
+    pointer-events: none;
+    z-index: 5;
+  }
+
   .liquid-glass::after {
     content: "";
     position: absolute;
     inset: 0;
     border-radius: inherit;
     box-shadow:
-      inset 0 1px 1px rgba(255, 255, 255, 0.4),
-      inset 0 -1px 2px rgba(0, 0, 0, 0.1),
-      inset 2px 0 3px rgba(255, 255, 255, 0.1),
-      inset -2px 0 3px rgba(255, 255, 255, 0.1),
-      0 8px 32px rgba(0, 0, 0, 0.2),
-      0 2px 8px rgba(0, 0, 0, 0.15);
+      inset 0 1px 1px rgba(255, 255, 255, 0.25),
+      inset 0 -1px 2px rgba(0, 0, 0, 0.05),
+      inset 2px 0 3px rgba(255, 255, 255, 0.05),
+      inset -2px 0 3px rgba(255, 255, 255, 0.05),
+      0 8px 32px rgba(0, 0, 0, 0.12),
+      0 2px 8px rgba(0, 0, 0, 0.08);
     pointer-events: none;
   }
 
@@ -206,18 +246,16 @@
     position: absolute;
     top: 0;
     left: 0;
-    right: 0;
-    height: 50%;
+    width: 60%;
+    height: 60%;
     border-radius: inherit;
-    background: linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.25) 0%,
-      rgba(255, 255, 255, 0.08) 50%,
+    background: radial-gradient(
+      ellipse at top left,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0) 30%,
       transparent 100%
     );
     pointer-events: none;
-    border-bottom-left-radius: 50% 20%;
-    border-bottom-right-radius: 50% 20%;
   }
 
   .btn {
@@ -251,16 +289,16 @@
   <div class="stack">
     <div class="pfp" style='background-image:url("./main-assets/pfp.png")'></div>
 
-    <div class="frame about-me liquid-glass" style='background-image:url("./main-assets/about-me.svg")'><div class="liquid-glass-overlay"></div><div class="liquid-glass-shine"></div></div>
-    <div class="frame separator liquid-glass" style='background-image:url("./main-assets/separator.svg")'><div class="liquid-glass-overlay"></div><div class="liquid-glass-shine"></div></div>
+    <div class="frame about-me liquid-glass" style='background-image:url("./main-assets/about-me.svg")'><div class="liquid-glass-overlay"></div><div class="liquid-glass-shine"></div><div class="liquid-glass-refraction"></div></div>
+    <div class="frame separator liquid-glass" style='background-image:url("./main-assets/separator.svg")'><div class="liquid-glass-overlay"></div><div class="liquid-glass-shine"></div><div class="liquid-glass-refraction"></div></div>
 
     <a class="btn liquid-glass"
        href="https://github.com/NotCryptid/MicroOS"
-       style='background-image:url("./main-assets/microos.svg")'><div class="liquid-glass-overlay"></div><div class="liquid-glass-shine"></div></a>
+       style='background-image:url("./main-assets/microos.svg")'><div class="liquid-glass-overlay"></div><div class="liquid-glass-shine"></div><div class="liquid-glass-refraction"></div></a>
 
     <a class="btn liquid-glass"
        href="https://github.com/Cryptidium"
-       style='background-image:url("./main-assets/cryptidium.svg")'><div class="liquid-glass-overlay"></div><div class="liquid-glass-shine"></div></a>
+       style='background-image:url("./main-assets/cryptidium.svg")'><div class="liquid-glass-overlay"></div><div class="liquid-glass-shine"></div><div class="liquid-glass-refraction"></div></a>
   </div>
 
 <script>
