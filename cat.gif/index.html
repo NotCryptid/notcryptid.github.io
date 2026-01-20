@@ -2,28 +2,67 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <script>
-        const gifs = [
-            'ballz.gif',
-            'boing.gif',
-            'civil.gif',
-            'cta.gif',
-            'door.gif',
-            'explod.gif',
-            'golf.gif',
-            'human_cat.gif',
-            'live.gif',
-            'piano.gif',
-            'shower.gif',
-            'stare.gif',
-            'wawamelon.gif'
-        ];
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        const randomGif = gifs[Math.floor(Math.random() * gifs.length)];
-        window.location.href = randomGif;
-    </script>
+    <!-- Open Graph meta tags (static) - used by embeds like Discord/Facebook/Twitter -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Random Cat GIF">
+    <meta property="og:description" content="A random cat GIF for your viewing pleasure">
+    <meta property="og:image" content="https://cryptid.is-a.dev/cat.gif/wawamelon.gif">
+    <meta property="og:url" content="https://cryptid.is-a.dev/cat.gif/">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Random Cat GIF">
+    <meta name="twitter:description" content="A random cat GIF for your viewing pleasure">
+    <meta name="twitter:image" content="https://cryptid.is-a.dev/cat.gif/wawamelon.gif">
+
+    <meta name="theme-color" content="#FF6B9D">
+
+    <title>Random Cat GIF</title>
+
+    <style>
+        :root{color-scheme: light dark}
+        html,body{height:100%;margin:0}
+        body{display:flex;align-items:center;justify-content:center;background:#111;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial}
+        img{max-width:90vw;max-height:90vh;object-fit:contain;border-radius:8px}
+        .notice{position:fixed;left:12px;bottom:12px;font-size:12px;opacity:.8}
+    </style>
 </head>
 <body>
-    <p>penar</p>
+    <img id="gif" alt="Random Cat GIF">
+    <div class="notice">If you want a direct embedable page for a specific GIF, use <code>/cat.gif/wawamelon.html</code> (not created yet).</div>
+
+    <script>
+        (function(){
+            const gifs=[
+                'ballz.gif',
+                'boing.gif',
+                'civil.gif',
+                'cta.gif',
+                'door.gif',
+                'explod.gif',
+                'golf.gif',
+                'human_cat.gif',
+                'live.gif',
+                'piano.gif',
+                'shower.gif',
+                'stare.gif',
+                'wawamelon.gif'
+            ];
+
+            const choice = gifs[Math.floor(Math.random()*gifs.length)];
+            const img = document.getElementById('gif');
+            img.src = choice;
+
+            // Make the image clickable to open the raw GIF
+            img.style.cursor = 'pointer';
+            img.addEventListener('click', ()=>{ window.location.href = choice; });
+        })();
+    </script>
+
+    <noscript>
+        <p style="padding:16px;">JavaScript is required to display a random GIF. You can open a specific GIF file directly in the folder.</p>
+    </noscript>
 </body>
 </html>
