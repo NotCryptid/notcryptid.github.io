@@ -37,7 +37,7 @@
   // Chromium-based (Chrome, Chromium Edge "Edg/", Brave, Opera "OPR/", Vivaldi, …)
   // All carry "Chrome/X.X.X.X" in the UA — requires >= 145.0.7632.116
   var cm = ua.match(/Chrom(?:e|ium)\/([\d.]+)/);
-  if (cm) ok = verGte(cm[1], '145.0.7632.116');
+  if (cm) ok = verGte(cm[1], '145.0.7632.109');
 
   // Pure WebKit (Safari, GNOME Web/WebKitGTK, …) — no Chrome token
   // Safari exposes the release via "Version/X.Y"; WebKitGTK via "WebKit/X.Y"
