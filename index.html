@@ -35,9 +35,9 @@
   var ok = false;
 
   // Chromium-based (Chrome, Chromium Edge "Edg/", Brave, Opera "OPR/", Vivaldi, …)
-  // All carry "Chrome/X.X.X.X" in the UA — requires >= 145.0.7632.116
+  // All carry "Chrome/X.X.X.X" in the UA — requires >= 144.0.0.0
   var cm = ua.match(/Chrom(?:e|ium)\/([\d.]+)/);
-  if (cm) ok = verGte(cm[1], '145.0.7632.109');
+  if (cm) ok = verGte(cm[1], '144.0.0.0');
 
   // Pure WebKit (Safari, GNOME Web/WebKitGTK, …) — no Chrome token
   // Safari exposes the release via "Version/X.Y"; WebKitGTK via "WebKit/X.Y"
@@ -75,7 +75,7 @@
       '    This site requires a modern Chromium&#8209;based or WebKit&#8209;based browser.',
       '  </p>',
       '  <p style="margin:0 0 20px;font-size:.85rem;color:rgba(255,255,255,.5)">',
-      '    Minimum: <strong style="color:rgba(255,255,255,.8)">Chromium&nbsp;145.0.7632.109</strong>',
+      '    Minimum: <strong style="color:rgba(255,255,255,.8)">Chromium&nbsp;144.0.0.0</strong>',
       '    &nbsp;or&nbsp;<strong style="color:rgba(255,255,255,.8)">WebKit&nbsp;2.50.4</strong><br>',
       '    Firefox, Internet Explorer, and legacy Edge are not supported.',
       '  </p>',
