@@ -114,65 +114,51 @@
     margin: 0;
   }
 
-  body {
-    background: url("./main-assets/Background.png");
-    -webkit-tap-highlight-color: transparent;
+  html {
+    background: url("./main-assets/Background.png") center / cover no-repeat fixed;
   }
 
   @media (max-width: 768px) and (orientation: portrait) {
-    body {
-      background: url("./main-assets/Background-480p.png");
-      -webkit-tap-highlight-color: transparent;
+    html {
+      background-image: url("./main-assets/Background-480p.png");
     }
   }
-  
+
   @media (max-width: 1024px) and (orientation: landscape) {
-    body {
-      background: url("./main-assets/Background-720p.png");
-      -webkit-tap-highlight-color: transparent;
+    html {
+      background-image: url("./main-assets/Background-720p.png");
     }
   }
 
   @media (min-width: 769px) and (max-width: 1024px) and (orientation: portrait) {
-    body {
-      background: url("./main-assets/Background-1080p.png");
-      -webkit-tap-highlight-color: transparent;
+    html {
+      background-image: url("./main-assets/Background-1080p.png");
     }
   }
 
   @media (min-width: 1025px) {
-    body {
-      background: url("./main-assets/Background-1440p.png");
-      -webkit-tap-highlight-color: transparent;
+    html {
+      background-image: url("./main-assets/Background-1440p.png");
     }
   }
 
   @media (min-width: 1921px) {
-    body {
-      background: url("./main-assets/Background-4k.png");
-      -webkit-tap-highlight-color: transparent;
+    html {
+      background-image: url("./main-assets/Background-4k.png");
     }
   }
 
   body {
-    background-position: center;
+    background: transparent;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     display: grid;
     place-items: center;
     font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
   }
-
-  @media (orientation: portrait) {
-    body {
-      background-size: 100% auto;
-      background-size: auto 100%;
-    }
-  }
-    @media (orientation: landscape) {
-        body {
-        background-size: 100% auto;
-        }
-    }
 
   .stack {
     display: flex;
