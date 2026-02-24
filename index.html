@@ -4,6 +4,93 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
 <title>Cryptids Emporium</title>
+<script>
+(function () {
+  var ua = navigator.userAgent;
+
+  function parseVer(s) { return s.split('.').map(Number); }
+  function verGte(a, b) {
+    var av = parseVer(a), bv = parseVer(b);
+    for (var i = 0; i < Math.max(av.length, bv.length); i++) {
+      var x = av[i] || 0, y = bv[i] || 0;
+      if (x > y) return true;
+      if (x < y) return false;
+    }
+    return true;
+  }
+
+  // --- Explicit blocklist ---
+  // Internet Explorer: MSIE token or Trident layout engine
+  var isIE = /MSIE |Trident\//.test(ua);
+  // Legacy Edge (EdgeHTML engine): "Edge/" without any Chromium "Chrome/" token
+  var isLegacyEdge = /\bEdge\//.test(ua) && !/\bChrom(?:e|ium)\//.test(ua);
+  // Firefox / Gecko-based
+  var isFirefox = /\bFirefox\//.test(ua) || /\bGecko\//.test(ua) && !/\bChrom(?:e|ium)\//.test(ua);
+
+  if (isIE || isLegacyEdge || isFirefox) {
+    showGate(); return;
+  }
+
+  // --- Allowlist (with minimum version) ---
+  var ok = false;
+
+  // Chromium-based (Chrome, Chromium Edge "Edg/", Brave, Opera "OPR/", Vivaldi, …)
+  // All carry "Chrome/X.X.X.X" in the UA — requires >= 145.0.7632.116
+  var cm = ua.match(/Chrom(?:e|ium)\/([\d.]+)/);
+  if (cm) ok = verGte(cm[1], '145.0.7632.116');
+
+  // Pure WebKit (Safari, GNOME Web/WebKitGTK, …) — no Chrome token
+  // Safari exposes the release via "Version/X.Y"; WebKitGTK via "WebKit/X.Y"
+  if (!ok && !cm) {
+    var wm = ua.match(/Version\/([\d.]+).*Safari/);
+    if (wm) ok = verGte(wm[1], '2.50.4');
+    var gm = ua.match(/WebKit\/([\d.]+)/);
+    if (!ok && gm) ok = verGte(gm[1], '2.50.4');
+  }
+
+  // Anything that reaches here without matching either engine is also blocked
+  if (ok) return;
+
+  showGate();
+
+  function showGate() {
+    document.addEventListener('DOMContentLoaded', function () {
+      document.body.style.display = 'none';
+    });
+
+    var overlay = document.createElement('div');
+    overlay.id = 'browser-gate';
+    overlay.style.cssText = [
+      'position:fixed', 'inset:0', 'z-index:99999',
+      'display:flex', 'align-items:center', 'justify-content:center',
+      'background:rgba(0,0,0,0.92)',
+      'font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial',
+      'color:#fff', 'padding:24px', 'box-sizing:border-box'
+    ].join(';');
+    overlay.innerHTML = [
+      '<div style="max-width:440px;text-align:center;line-height:1.6">',
+      '  <div style="font-size:2.4rem;margin-bottom:8px">&#9888;</div>',
+      '  <h2 style="margin:0 0 12px;font-size:1.25rem;font-weight:700">Unsupported Browser</h2>',
+      '  <p style="margin:0 0 6px;font-size:.9rem;color:rgba(255,255,255,.75)">',
+      '    This site requires a modern Chromium&#8209;based or WebKit&#8209;based browser.',
+      '  </p>',
+      '  <p style="margin:0 0 20px;font-size:.85rem;color:rgba(255,255,255,.5)">',
+      '    Minimum: <strong style="color:rgba(255,255,255,.8)">Chromium&nbsp;145.0.7632.116</strong>',
+      '    &nbsp;or&nbsp;<strong style="color:rgba(255,255,255,.8)">WebKit&nbsp;2.50.4</strong><br>',
+      '    Firefox, Internet Explorer, and legacy Edge are not supported.',
+      '  </p>',
+      '  <a href="https://www.google.com/chrome/"',
+      '     style="display:inline-block;padding:10px 22px;background:#fff;color:#000;border-radius:8px;',
+      '            text-decoration:none;font-size:.875rem;font-weight:600">',
+      '    Download Chrome',
+      '  </a>',
+      '</div>'
+    ].join('');
+
+    document.documentElement.appendChild(overlay);
+  }
+})();
+</script>
 <link rel="icon" href="./main-assets/favicon.png" type="image/png" sizes="32x32" />
 <style>
   :root {
