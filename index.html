@@ -19,28 +19,18 @@
     return true;
   }
 
-  // --- Explicit blocklist ---
-  // Internet Explorer: MSIE token or Trident layout engine
   var isIE = /MSIE |Trident\//.test(ua);
-  // Legacy Edge (EdgeHTML engine): "Edge/" without any Chromium "Chrome/" token
   var isLegacyEdge = /\bEdge\//.test(ua) && !/\bChrom(?:e|ium)\//.test(ua);
-  // Firefox / Gecko-based
   var isFirefox = /\bFirefox\//.test(ua) || /\bGecko\//.test(ua) && !/\bChrom(?:e|ium)\//.test(ua);
 
   if (isIE || isLegacyEdge || isFirefox) {
     showGate(); return;
   }
-
-  // --- Allowlist (with minimum version) ---
   var ok = false;
 
-  // Chromium-based (Chrome, Chromium Edge "Edg/", Brave, Opera "OPR/", Vivaldi, …)
-  // All carry "Chrome/X.X.X.X" in the UA — requires >= 144.0.0.0
   var cm = ua.match(/Chrom(?:e|ium)\/([\d.]+)/);
   if (cm) ok = verGte(cm[1], '144.0.0.0');
 
-  // Pure WebKit (Safari, GNOME Web/WebKitGTK, …) — no Chrome token
-  // Safari exposes the release via "Version/X.Y"; WebKitGTK via "WebKit/X.Y"
   if (!ok && !cm) {
     var wm = ua.match(/Version\/([\d.]+).*Safari/);
     if (wm) ok = verGte(wm[1], '2.50.4');
@@ -48,7 +38,6 @@
     if (!ok && gm) ok = verGte(gm[1], '2.50.4');
   }
 
-  // Anything that reaches here without matching either engine is also blocked
   if (ok) return;
 
   showGate();
