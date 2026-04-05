@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Human Reasoning Benchmark</title>
+    <style>
+        :root {
+            --bg: #000000;
+            --bg-soft: #000000;
+            --panel: #000000;
+            --panel-alt: #000000;
+            --line: #ffffff;
+            --text: #ffffff;
+            --text-dim: #ffffff;
+            --warn: #ffffff;
+            --bad: #ffffff;
+            --good: #ffffff;
+            --accent: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Courier New', monospace;
+            padding: 18px;
+        }
+
+        .app {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            gap: 14px;
+        }
+
+        .screen {
+            border: 1px solid var(--line);
+            background: var(--panel);
+            padding: 14px;
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .titlebar {
+            border: 1px solid var(--line);
+            padding: 8px 10px;
+            background: #000000;
+            color: var(--accent);
+            font-size: 17px;
+            letter-spacing: 0.02em;
+        }
+
+        .subtitle {
+            margin: 8px 0 14px;
+            color: var(--text-dim);
+            font-size: 0.95rem;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(200px, 1fr));
+            gap: 14px;
+        }
+
+        .square-panel {
+            aspect-ratio: 1 / 1;
+            border: 1px solid var(--line);
+            background: #000000;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            padding: 12px;
+            gap: 10px;
+        }
+
+        .square-panel h2 {
+            margin: 0;
+            font-size: 1rem;
+            color: var(--accent);
+        }
+
+        .ascii {
+            font-size: 0.85rem;
+            white-space: pre;
+            color: var(--text-dim);
+            margin: 0;
+        }
+
+        .btn {
+            border: 1px solid var(--line);
+            background: #000000;
+            color: var(--text);
+            padding: 9px 10px;
+            font-family: inherit;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .btn:hover {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            border-color: #ffffff;
+            color: #ffffff;
+        }
+
+        .btn.warn {
+            color: var(--warn);
+            border-color: #ffffff;
+        }
+
+        .btn.good {
+            color: var(--good);
+            border-color: #ffffff;
+        }
+
+        .stack {
+            display: grid;
+            gap: 12px;
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(220px, 1fr));
+            gap: 12px;
+        }
+
+        .config-card {
+            border: 1px solid var(--line);
+            padding: 10px;
+            background: #000000;
+        }
+
+        .config-card h3 {
+            margin: 0 0 8px;
+            font-size: 0.95rem;
+            color: var(--accent);
+        }
+
+        label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            color: var(--text-dim);
+        }
+
+        .ascii-checkbox {
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .ascii-checkbox input[type="checkbox"],
+        .ascii-checkbox input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 1px;
+            height: 1px;
+            pointer-events: none;
+        }
+
+        .ascii-box {
+            display: inline-block;
+            min-width: 2.4em;
+            color: var(--text);
+        }
+
+        .ascii-checkbox input[type="checkbox"] + .ascii-box::before,
+        .ascii-checkbox input[type="radio"] + .ascii-box::before {
+            content: "[ ]";
+        }
+
+        .ascii-checkbox input[type="checkbox"]:checked + .ascii-box::before,
+        .ascii-checkbox input[type="radio"]:checked + .ascii-box::before {
+            content: "[x]";
+        }
+
+        input[type="checkbox"],
+        input[type="radio"] {
+            accent-color: #ffffff;
+        }
+
+        .terminal-box {
+            border: 1px solid var(--line);
+            background: #000000;
+            padding: 10px;
+            min-height: 80px;
+            white-space: pre-wrap;
+            color: var(--text);
+        }
+
+        .solver-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .equation {
+            color: var(--accent);
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .fields {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(80px, 1fr));
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .fields.two {
+            grid-template-columns: repeat(2, minmax(80px, 1fr));
+        }
+
+        .field-wrap {
+            display: grid;
+            gap: 6px;
+        }
+
+        .field-wrap span {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+        }
+
+        .field-wrap input,
+        .notebook-input,
+        select {
+            border: 1px solid var(--line);
+            background: #000000;
+            color: var(--text);
+            padding: 8px;
+            font-family: inherit;
+            width: 100%;
+        }
+
+        .notebook-input {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .calc-display {
+            border: 1px solid var(--line);
+            background: #000000;
+            color: var(--text);
+            padding: 8px;
+            width: 100%;
+            font-family: inherit;
+            text-align: right;
+            margin-bottom: 8px;
+        }
+
+        .calc-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(44px, 1fr));
+            gap: 6px;
+        }
+
+        .calc-key {
+            border: 1px solid var(--line);
+            background: #000000;
+            color: var(--text);
+            padding: 8px;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .calc-key:hover {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(220px, 1fr));
+            gap: 12px;
+        }
+
+        .results-panel {
+            border: 1px solid var(--line);
+            background: #000000;
+            padding: 10px;
+            min-height: 280px;
+        }
+
+        .results-panel h3 {
+            margin: 0 0 8px;
+            color: var(--accent);
+            font-size: 0.95rem;
+        }
+
+        .provider-list {
+            display: grid;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .tag {
+            font-size: 0.8rem;
+            margin-left: 6px;
+            color: var(--warn);
+        }
+
+        .tag.bad {
+            color: var(--bad);
+        }
+
+        .status {
+            min-height: 22px;
+            color: var(--warn);
+            margin-top: 4px;
+            font-size: 0.9rem;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 900px) {
+            .grid-2,
+            .config-grid,
+            .solver-grid,
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .square-panel {
+                aspect-ratio: auto;
+                min-height: 280px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="app">
+        <section id="screen-main" class="screen active" aria-label="Main selection screen">
+            <div class="titlebar">== HUMAN REASONING BENCHMARK :: MAIN MENU ==</div>
+            <p class="subtitle">> Select a benchmark mode.</p>
+
+            <div class="grid-2">
+                <article class="square-panel">
+                    <h2>[ MODE_2D :: TWO-VARIABLE SYSTEM ]</h2>
+                    <pre class="ascii">+-------------------+
+| ax + by = c       |
+| dx + ey = f       |
++-------------------+
+| Solve for x and y |
++-------------------+</pre>
+                    <button class="btn" id="choose2d" type="button">[ ENTER 2D SOLVER ]</button>
+                </article>
+
+                <article class="square-panel">
+                    <h2>[ MODE_3D :: THREE-VARIABLE SYSTEM ]</h2>
+                    <pre class="ascii">+-------------------+
+| ax + by + cz = d  |
+| ex + fy + gz = h  |
+| ix + jy + kz = l  |
++-------------------+
+| Solve for x y z   |
++-------------------+</pre>
+                    <button class="btn" id="choose3d" type="button">[ ENTER 3D SOLVER ]</button>
+                </article>
+            </div>
+        </section>
+
+        <section id="screen-config" class="screen" aria-label="Configuration screen">
+            <div class="titlebar">== HUMAN REASONING BENCHMARK :: SESSION CONFIG ==</div>
+            <p class="subtitle">> Configure run. Start unlocks after microphone permission.</p>
+
+            <div class="stack">
+                <div class="config-grid">
+                    <article class="config-card">
+                        <h3>[ TOOLS ]</h3>
+                        <label class="ascii-checkbox"><input id="allowNotebook" type="checkbox"><span class="ascii-box" aria-hidden="true"></span>Enable notebook (10 chars)</label>
+                        <label class="ascii-checkbox"><input id="allowCalculator" type="checkbox"><span class="ascii-box" aria-hidden="true"></span>Enable simple calculator</label>
+                    </article>
+
+                    <article class="config-card">
+                        <h3>[ RULES ]</h3>
+                        <label class="ascii-checkbox"><input id="allowNegatives" type="checkbox" checked><span class="ascii-box" aria-hidden="true"></span>Include negative numbers</label>
+                        <label class="ascii-checkbox"><input id="strictIntegers" type="checkbox"><span class="ascii-box" aria-hidden="true"></span>Force integer answers</label>
+                    </article>
+                </div>
+
+                <div class="config-card">
+                    <h3>[ MICROPHONE ]</h3>
+                    <p class="subtitle" style="margin-top:0;">> Speech recognition: <span id="speechSupportText">checking...</span></p>
+                    <button class="btn warn" id="grantPermissionBtn" type="button">[ GRANT MIC / SPEECH ACCESS ]</button>
+                    <div class="status" id="permissionStatus"></div>
+                </div>
+
+                <div class="toolbar" style="justify-content: space-between;">
+                    <button class="btn" id="backToMain" type="button">[ BACK TO MAIN ]</button>
+                    <button class="btn good" id="startSessionBtn" type="button" disabled>[ START SESSION ]</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-solver" class="screen" aria-label="Solver screen">
+            <div class="titlebar">== HUMAN REASONING BENCHMARK :: SOLVING SESSION ==</div>
+            <p class="subtitle">> Solve while speaking your reasoning. Transcript is hidden until results.</p>
+
+            <div class="solver-grid">
+                <article class="config-card">
+                    <h3>[ PROBLEM FEED ]</h3>
+                    <div id="equationText" class="terminal-box equation"></div>
+
+                    <div id="answerFields" class="fields two"></div>
+
+                    <div class="toolbar">
+                        <button class="btn" id="submitBtn" type="button">[ SUBMIT RESULTS ]</button>
+                    </div>
+                    <div class="status" id="solverStatus"></div>
+                </article>
+
+                <article class="config-card">
+                    <h3>[ REASONING CAPTURE ]</h3>
+                    <div id="captureStatus" class="terminal-box">Listening will start automatically when the round starts.</div>
+                    <div id="transcriptText" class="terminal-box hidden" aria-hidden="true"></div>
+
+                    <div id="notebookWrap" class="hidden" style="margin-top:10px;">
+                        <h3>[ NOTEBOOK ] (10 CHARS MAX)</h3>
+                        <textarea id="notebookText" class="notebook-input" maxlength="10" placeholder="Max 10 chars"></textarea>
+                    </div>
+
+                    <div id="calculatorWrap" class="hidden" style="margin-top:10px;">
+                        <h3>[ SIMPLE CALCULATOR ]</h3>
+                        <input id="calcDisplay" class="calc-display" type="text" readonly>
+                        <div id="calcGrid" class="calc-grid">
+                            <button class="calc-key" data-key="C" type="button">C</button>
+                            <button class="calc-key" data-key="B" type="button">Back</button>
+                            <button class="calc-key" data-key="/" type="button">/</button>
+                            <button class="calc-key" data-key="*" type="button">*</button>
+                            <button class="calc-key" data-key="7" type="button">7</button>
+                            <button class="calc-key" data-key="8" type="button">8</button>
+                            <button class="calc-key" data-key="9" type="button">9</button>
+                            <button class="calc-key" data-key="-" type="button">-</button>
+                            <button class="calc-key" data-key="4" type="button">4</button>
+                            <button class="calc-key" data-key="5" type="button">5</button>
+                            <button class="calc-key" data-key="6" type="button">6</button>
+                            <button class="calc-key" data-key="+" type="button">+</button>
+                            <button class="calc-key" data-key="1" type="button">1</button>
+                            <button class="calc-key" data-key="2" type="button">2</button>
+                            <button class="calc-key" data-key="3" type="button">3</button>
+                            <button class="calc-key" data-key="=" type="button">=</button>
+                            <button class="calc-key" data-key="0" type="button">0</button>
+                            <button class="calc-key" data-key="." type="button">.</button>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section id="screen-results" class="screen" aria-label="Results screen">
+            <div class="titlebar">== HUMAN REASONING BENCHMARK :: RESULTS ==</div>
+            <p class="subtitle">> Review outcome, transcript, and AI prompt actions.</p>
+
+            <div class="results-grid">
+                <article class="results-panel">
+                    <h3>[ ANSWER CHECK + DETERMINANTS ]</h3>
+                    <div id="answerSummary" class="terminal-box" style="min-height:240px;"></div>
+                </article>
+
+                <article class="results-panel">
+                    <h3>[ CHAIN OF THOUGHT ]</h3>
+                    <div id="cotSummary" class="terminal-box" style="min-height:240px;"></div>
+                </article>
+
+                <article class="results-panel">
+                    <h3>[ MODEL PROVIDER + ACTIONS ]</h3>
+                    <div class="provider-list">
+                        <label class="ascii-checkbox"><input type="radio" name="provider" value="claude" checked><span class="ascii-box" aria-hidden="true"></span>CLAUDE <span class="tag">[RECOMMENDED]</span></label>
+                        <label class="ascii-checkbox"><input type="radio" name="provider" value="gemini"><span class="ascii-box" aria-hidden="true"></span>GEMINI</label>
+                        <label class="ascii-checkbox"><input type="radio" name="provider" value="chatgpt"><span class="ascii-box" aria-hidden="true"></span>CHATGPT <span class="tag bad">[DISCOURAGED]</span></label>
+                    </div>
+
+                    <div class="toolbar">
+                        <button class="btn" id="openRateBtn" type="button">[ OPEN RATING PROMPT IN MODEL ]</button>
+                        <button class="btn" id="openSolveBtn" type="button">[ OPEN SOLVE PROMPT IN MODEL ]</button>
+                        <button class="btn" id="copyRateBtn" type="button">[ COPY PROMPT: RATING ]</button>
+                        <button class="btn" id="copySolveBtn" type="button">[ COPY PROMPT: SOLVE ]</button>
+                    </div>
+
+                    <div class="status" id="resultStatus"></div>
+                </article>
+            </div>
+
+            <div class="toolbar" style="margin-top:12px;">
+                <button class="btn" id="newRoundBtn" type="button">[ NEW ROUND ]</button>
+                <button class="btn" id="backToMainFromResults" type="button">[ MAIN MENU ]</button>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const screens = {
+            main: document.getElementById('screen-main'),
+            config: document.getElementById('screen-config'),
+            solver: document.getElementById('screen-solver'),
+            results: document.getElementById('screen-results')
+        };
+
+        const choose2d = document.getElementById('choose2d');
+        const choose3d = document.getElementById('choose3d');
+        const backToMain = document.getElementById('backToMain');
+        const backToMainFromResults = document.getElementById('backToMainFromResults');
+
+        const allowNotebook = document.getElementById('allowNotebook');
+        const allowCalculator = document.getElementById('allowCalculator');
+        const allowNegatives = document.getElementById('allowNegatives');
+        const strictIntegers = document.getElementById('strictIntegers');
+
+        const speechSupportText = document.getElementById('speechSupportText');
+        const grantPermissionBtn = document.getElementById('grantPermissionBtn');
+        const permissionStatus = document.getElementById('permissionStatus');
+        const startSessionBtn = document.getElementById('startSessionBtn');
+
+        const equationText = document.getElementById('equationText');
+        const answerFields = document.getElementById('answerFields');
+        const submitBtn = document.getElementById('submitBtn');
+        const solverStatus = document.getElementById('solverStatus');
+
+        const captureStatus = document.getElementById('captureStatus');
+        const transcriptText = document.getElementById('transcriptText');
+        const notebookWrap = document.getElementById('notebookWrap');
+        const notebookText = document.getElementById('notebookText');
+        const calculatorWrap = document.getElementById('calculatorWrap');
+        const calcDisplay = document.getElementById('calcDisplay');
+        const calcGrid = document.getElementById('calcGrid');
+
+        const answerSummary = document.getElementById('answerSummary');
+        const cotSummary = document.getElementById('cotSummary');
+        const resultStatus = document.getElementById('resultStatus');
+        const openRateBtn = document.getElementById('openRateBtn');
+        const openSolveBtn = document.getElementById('openSolveBtn');
+        const copyRateBtn = document.getElementById('copyRateBtn');
+        const copySolveBtn = document.getElementById('copySolveBtn');
+        const newRoundBtn = document.getElementById('newRoundBtn');
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+
+        let permissionGranted = false;
+        let listening = false;
+        let mode = '2d';
+        let transcriptFinal = '';
+        let transcriptInterim = '';
+        let session = null;
+        let sessionStartMs = null;
+        let elapsedSeconds = 0;
+
+        function showScreen(name) {
+            Object.values(screens).forEach((screen) => screen.classList.remove('active'));
+            screens[name].classList.add('active');
+        }
+
+        function randInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function pickSigned(minAbs, maxAbs, allowNeg) {
+            const absVal = randInt(minAbs, maxAbs);
+            if (!allowNeg) {
+                return absVal;
+            }
+            return Math.random() < 0.5 ? -absVal : absVal;
+        }
+
+        function safeEvalExpr(expression) {
+            const cleaned = expression.replace(/\s+/g, '');
+            if (!cleaned) {
+                return '';
+            }
+            if (!/^[0-9+\-*/().]+$/.test(cleaned)) {
+                return 'Invalid expression';
+            }
+            try {
+                const value = Function('"use strict"; return (' + cleaned + ');')();
+                if (!Number.isFinite(value)) {
+                    return 'Math error';
+                }
+                return String(value);
+            } catch (_error) {
+                return 'Evaluation failed';
+            }
+        }
+
+        function setupSpeech() {
+            if (!recognition) {
+                speechSupportText.textContent = 'not supported in this browser';
+                return;
+            }
+
+            speechSupportText.textContent = 'supported';
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = (event) => {
+                transcriptInterim = '';
+                for (let i = event.resultIndex; i < event.results.length; i += 1) {
+                    const text = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        transcriptFinal += text + ' ';
+                    } else {
+                        transcriptInterim += text;
+                    }
+                }
+                const merged = (transcriptFinal + transcriptInterim).trim();
+                const words = merged ? merged.split(/\s+/).length : 0;
+                captureStatus.textContent = words > 0
+                    ? 'Listening... Captured ' + words + ' words. Transcript will be shown after submit.'
+                    : 'Listening... Start reasoning out loud.';
+                transcriptText.textContent = merged || '[listening...]';
+            };
+
+            recognition.onerror = (event) => {
+                solverStatus.textContent = 'Speech error: ' + event.error;
+            };
+
+            recognition.onend = () => {
+                if (listening) {
+                    recognition.start();
+                }
+            };
+        }
+
+        async function requestPermission() {
+            if (!recognition) {
+                permissionStatus.textContent = 'Speech recognition is unavailable. Use a supported browser.';
+                permissionGranted = false;
+                startSessionBtn.disabled = true;
+                return;
+            }
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                stream.getTracks().forEach((track) => track.stop());
+                permissionGranted = true;
+                permissionStatus.textContent = 'Permission granted. Start is now enabled.';
+                startSessionBtn.disabled = false;
+            } catch (_error) {
+                permissionGranted = false;
+                permissionStatus.textContent = 'Permission denied or unavailable.';
+                startSessionBtn.disabled = true;
+            }
+        }
+
+        function det2(a, b, c, d) {
+            return (a * d) - (b * c);
+        }
+
+        function generate2D(allowNeg) {
+            let a; let b; let c; let d; let w;
+            do {
+                a = pickSigned(1, 8, allowNeg);
+                b = pickSigned(1, 8, allowNeg);
+                c = pickSigned(1, 8, allowNeg);
+                d = pickSigned(1, 8, allowNeg);
+                w = det2(a, b, c, d);
+            } while (w === 0);
+
+            const x = pickSigned(1, 6, allowNeg);
+            const y = pickSigned(1, 6, allowNeg);
+            const r1 = (a * x) + (b * y);
+            const r2 = (c * x) + (d * y);
+            const wx = det2(r1, b, r2, d);
+            const wy = det2(a, r1, c, r2);
+
+            return {
+                mode: '2d',
+                equations: [
+                    a + 'x + ' + b + 'y = ' + r1,
+                    c + 'x + ' + d + 'y = ' + r2
+                ],
+                answer: { x, y },
+                determinants: { w, wx, wy }
+            };
+        }
+
+        function det3(m) {
+            const a = m[0][0]; const b = m[0][1]; const c = m[0][2];
+            const d = m[1][0]; const e = m[1][1]; const f = m[1][2];
+            const g = m[2][0]; const h = m[2][1]; const i = m[2][2];
+            return (a * ((e * i) - (f * h))) - (b * ((d * i) - (f * g))) + (c * ((d * h) - (e * g)));
+        }
+
+        function generate3D(allowNeg) {
+            let m; let w;
+            do {
+                m = [
+                    [pickSigned(1, 6, allowNeg), pickSigned(1, 6, allowNeg), pickSigned(1, 6, allowNeg)],
+                    [pickSigned(1, 6, allowNeg), pickSigned(1, 6, allowNeg), pickSigned(1, 6, allowNeg)],
+                    [pickSigned(1, 6, allowNeg), pickSigned(1, 6, allowNeg), pickSigned(1, 6, allowNeg)]
+                ];
+                w = det3(m);
+            } while (w === 0);
+
+            const x = pickSigned(1, 4, allowNeg);
+            const y = pickSigned(1, 4, allowNeg);
+            const z = pickSigned(1, 4, allowNeg);
+
+            const r1 = (m[0][0] * x) + (m[0][1] * y) + (m[0][2] * z);
+            const r2 = (m[1][0] * x) + (m[1][1] * y) + (m[1][2] * z);
+            const r3 = (m[2][0] * x) + (m[2][1] * y) + (m[2][2] * z);
+
+            const mx = [
+                [r1, m[0][1], m[0][2]],
+                [r2, m[1][1], m[1][2]],
+                [r3, m[2][1], m[2][2]]
+            ];
+            const my = [
+                [m[0][0], r1, m[0][2]],
+                [m[1][0], r2, m[1][2]],
+                [m[2][0], r3, m[2][2]]
+            ];
+
+            return {
+                mode: '3d',
+                equations: [
+                    m[0][0] + 'x + ' + m[0][1] + 'y + ' + m[0][2] + 'z = ' + r1,
+                    m[1][0] + 'x + ' + m[1][1] + 'y + ' + m[1][2] + 'z = ' + r2,
+                    m[2][0] + 'x + ' + m[2][1] + 'y + ' + m[2][2] + 'z = ' + r3
+                ],
+                answer: { x, y, z },
+                determinants: { w, wx: det3(mx), wy: det3(my) }
+            };
+        }
+
+        function buildFields() {
+            answerFields.innerHTML = '';
+            const vars = mode === '2d' ? ['x', 'y'] : ['x', 'y', 'z'];
+            answerFields.className = mode === '2d' ? 'fields two' : 'fields';
+            vars.forEach((key) => {
+                const wrap = document.createElement('div');
+                wrap.className = 'field-wrap';
+
+                const title = document.createElement('span');
+                title.textContent = 'Your ' + key;
+
+                const input = document.createElement('input');
+                input.type = strictIntegers.checked ? 'number' : 'text';
+                input.step = '1';
+                input.id = 'ans-' + key;
+                input.placeholder = key;
+
+                wrap.appendChild(title);
+                wrap.appendChild(input);
+                answerFields.appendChild(wrap);
+            });
+        }
+
+        function buildSession() {
+            session = mode === '2d' ? generate2D(allowNegatives.checked) : generate3D(allowNegatives.checked);
+            equationText.textContent = session.equations.join('\n');
+            buildFields();
+            transcriptFinal = '';
+            transcriptInterim = '';
+            transcriptText.textContent = '[listening...]';
+            captureStatus.textContent = 'Listening... Start explaining your reasoning.';
+            notebookText.value = '';
+            calcDisplay.value = '';
+
+            notebookWrap.classList.toggle('hidden', !allowNotebook.checked);
+            calculatorWrap.classList.toggle('hidden', !allowCalculator.checked);
+        }
+
+        function startListening() {
+            if (!permissionGranted || !recognition) {
+                solverStatus.textContent = 'Permission is required before starting.';
+                return;
+            }
+            listening = true;
+            recognition.start();
+            solverStatus.textContent = 'Listening is active. Solve the equation and submit when ready.';
+        }
+
+        function stopListening() {
+            if (!recognition) {
+                return;
+            }
+            listening = false;
+            recognition.stop();
+            solverStatus.textContent = 'Listening ended.';
+        }
+
+        function calcHandleKey(key) {
+            if (key === 'C') {
+                calcDisplay.value = '';
+                return;
+            }
+
+            if (key === 'B') {
+                calcDisplay.value = calcDisplay.value.slice(0, -1);
+                return;
+            }
+
+            if (key === '=') {
+                calcDisplay.value = safeEvalExpr(calcDisplay.value);
+                return;
+            }
+
+            calcDisplay.value += key;
+        }
+
+        function selectedProvider() {
+            const node = document.querySelector('input[name="provider"]:checked');
+            return node ? node.value : 'claude';
+        }
+
+        function providerUrl(provider, prompt) {
+            const encoded = encodeURIComponent(prompt);
+            if (provider === 'gemini') {
+                return 'https://gemini.google.com/app';
+            }
+            if (provider === 'chatgpt') {
+                return 'https://chatgpt.com/?q=' + encoded;
+            }
+            return 'https://claude.ai/new?q=' + encoded;
+        }
+
+        async function openProviderPrompt(provider, prompt, actionLabel) {
+            const url = providerUrl(provider, prompt);
+
+            if (provider === 'gemini') {
+                try {
+                    await navigator.clipboard.writeText(prompt);
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                    resultStatus.textContent = 'Opened Gemini. Prompt copied to clipboard, paste it into Gemini.';
+                    return;
+                } catch (_error) {
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                    resultStatus.textContent = 'Opened Gemini. Copy prompt with the copy button if auto-copy was blocked.';
+                    return;
+                }
+            }
+
+            window.open(url, '_blank', 'noopener,noreferrer');
+            resultStatus.textContent = actionLabel;
+        }
+
+        function formatElapsed(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+        }
+
+        function buildSolvePrompt() {
+            return [
+                'Solve this system carefully and show concise steps.',
+                'Mode: ' + session.mode.toUpperCase(),
+                '',
+                'Equations:',
+                session.equations.join('\n'),
+                '',
+                'Return final answer values clearly.'
+            ].join('\n');
+        }
+
+        function buildRatePrompt(userAnswers, correct, determinantsSummary, elapsedLabel) {
+            const transcript = (transcriptFinal + transcriptInterim).trim() || '[no transcript captured]';
+            return [
+                'Rate this chain of thought for equation solving quality.',
+                '',
+                'Mode: ' + session.mode.toUpperCase(),
+                'Equations:',
+                session.equations.join('\n'),
+                '',
+                'User submitted: ' + userAnswers,
+                'Correct? ' + (correct ? 'Yes' : 'No'),
+            'Solve timer: ' + elapsedLabel,
+                'Determinants: ' + determinantsSummary,
+                '',
+                'Chain of thought transcript:',
+                transcript,
+                '',
+                'Please output:',
+                '1) Mistakes found',
+                '2) Category scores (0-10 each):',
+                '   - Mathematical correctness: Equation setup, transformations, and final arithmetic.',
+                '   - Reasoning clarity: Steps are understandable, ordered, and easy to follow.',
+                '   - Efficiency: Avoids unnecessary steps and reaches solution directly.',
+                '   - Verification discipline: Checks work (substitution/back-check/error checks).',
+                '   - Tool independence: Appropriate reliance on memory/mental math vs notebook/calculator.',
+                '   - Time effectiveness: Quality of reasoning relative to solve time.',
+                '   Provide an overall score (0-10) after category scores.',
+                '3) Three specific improvement actions'
+            ].join('\n');
+        }
+
+        async function copyText(text, label) {
+            try {
+                await navigator.clipboard.writeText(text);
+                resultStatus.textContent = label + ' copied.';
+            } catch (_error) {
+                resultStatus.textContent = 'Copy failed. Clipboard permission may be blocked.';
+            }
+        }
+
+        function parseInputValue(id) {
+            const value = document.getElementById(id).value.trim();
+            if (value === '') {
+                return null;
+            }
+            const n = Number(value);
+            if (Number.isNaN(n)) {
+                return null;
+            }
+            if (strictIntegers.checked && !Number.isInteger(n)) {
+                return null;
+            }
+            return n;
+        }
+
+        function submitResults() {
+            if (!session) {
+                solverStatus.textContent = 'No active session.';
+                return;
+            }
+
+            const x = parseInputValue('ans-x');
+            const y = parseInputValue('ans-y');
+            const z = mode === '3d' ? parseInputValue('ans-z') : null;
+
+            if (x === null || y === null || (mode === '3d' && z === null)) {
+                solverStatus.textContent = 'Please fill valid answer values.';
+                return;
+            }
+
+            stopListening();
+            if (sessionStartMs) {
+                elapsedSeconds = Math.max(0, Math.round((Date.now() - sessionStartMs) / 1000));
+            }
+
+            const elapsedLabel = formatElapsed(elapsedSeconds);
+
+            const correct = mode === '2d'
+                ? (x === session.answer.x && y === session.answer.y)
+                : (x === session.answer.x && y === session.answer.y && z === session.answer.z);
+
+            const userAnswerText = mode === '2d'
+                ? 'x=' + x + ', y=' + y
+                : 'x=' + x + ', y=' + y + ', z=' + z;
+
+            const expectedText = mode === '2d'
+                ? 'x=' + session.answer.x + ', y=' + session.answer.y
+                : 'x=' + session.answer.x + ', y=' + session.answer.y + ', z=' + session.answer.z;
+
+            const detText = 'w=' + session.determinants.w + ', wx=' + session.determinants.wx + ', wy=' + session.determinants.wy;
+
+            answerSummary.textContent = [
+                'Submitted: ' + userAnswerText,
+                'Expected:  ' + expectedText,
+                'Result:    ' + (correct ? 'CORRECT' : 'INCORRECT'),
+                'Time:     ' + elapsedLabel,
+                '',
+                'Determinants',
+                'w  = ' + session.determinants.w,
+                'wx = ' + session.determinants.wx,
+                'wy = ' + session.determinants.wy
+            ].join('\n');
+
+            cotSummary.textContent = (transcriptFinal + transcriptInterim).trim() || '[no transcript captured]';
+
+            const solvePrompt = buildSolvePrompt();
+            const ratePrompt = buildRatePrompt(userAnswerText, correct, detText, elapsedLabel);
+
+            openSolveBtn.onclick = async () => {
+                await openProviderPrompt(
+                    selectedProvider(),
+                    solvePrompt,
+                    'Opened solve prompt in selected provider.'
+                );
+            };
+
+            openRateBtn.onclick = async () => {
+                await openProviderPrompt(
+                    selectedProvider(),
+                    ratePrompt,
+                    'Opened rating prompt in selected provider.'
+                );
+            };
+
+            copySolveBtn.onclick = () => copyText(solvePrompt, 'Solve prompt');
+            copyRateBtn.onclick = () => copyText(ratePrompt, 'Rate prompt');
+
+            resultStatus.textContent = 'Results ready. Open or copy prompts.';
+            showScreen('results');
+        }
+
+        choose2d.addEventListener('click', () => {
+            mode = '2d';
+            showScreen('config');
+        });
+
+        choose3d.addEventListener('click', () => {
+            mode = '3d';
+            showScreen('config');
+        });
+
+        backToMain.addEventListener('click', () => {
+            stopListening();
+            showScreen('main');
+        });
+
+        backToMainFromResults.addEventListener('click', () => {
+            showScreen('main');
+        });
+
+        newRoundBtn.addEventListener('click', () => {
+            showScreen('config');
+        });
+
+        grantPermissionBtn.addEventListener('click', requestPermission);
+
+        startSessionBtn.addEventListener('click', () => {
+            buildSession();
+            sessionStartMs = Date.now();
+            elapsedSeconds = 0;
+            showScreen('solver');
+            startListening();
+        });
+
+        submitBtn.addEventListener('click', submitResults);
+        notebookText.addEventListener('input', () => {
+            notebookText.value = notebookText.value.slice(0, 10);
+        });
+
+        calcGrid.addEventListener('click', (event) => {
+            const button = event.target.closest('[data-key]');
+            if (!button) {
+                return;
+            }
+            calcHandleKey(button.dataset.key);
+        });
+
+        setupSpeech();
+        startSessionBtn.disabled = true;
+    </script>
+</body>
+</html>
