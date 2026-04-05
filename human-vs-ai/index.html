@@ -575,6 +575,8 @@
         let session = null;
         let sessionStartMs = null;
         let elapsedSeconds = 0;
+        let notebookHistory = [];
+        let calculatorHistory = [];
 
         function showScreen(name) {
             Object.values(screens).forEach((screen) => screen.classList.remove('active'));
@@ -787,6 +789,8 @@
             captureStatus.textContent = 'Listening... Start explaining your reasoning.';
             notebookText.value = '';
             calcDisplay.value = '';
+            notebookHistory = [];
+            calculatorHistory = [];
 
             notebookWrap.classList.toggle('hidden', !allowNotebook.checked);
             calculatorWrap.classList.toggle('hidden', !allowCalculator.checked);
@@ -823,6 +827,10 @@
             }
 
             if (key === '=') {
+                const expression = calcDisplay.value.trim();
+                if (expression) {
+                    calculatorHistory.push(expression);
+                }
                 calcDisplay.value = safeEvalExpr(calcDisplay.value);
                 return;
             }
@@ -872,6 +880,20 @@
             return String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
         }
 
+        function formatHistory(history, emptyText) {
+            if (!history.length) {
+                return emptyText;
+            }
+            return history.join('\n');
+        }
+
+        function formatIndexedQuotedHistory(history, emptyText) {
+            if (!history.length) {
+                return emptyText;
+            }
+            return history.map((entry, index) => (index + 1) + '. ' + JSON.stringify(entry)).join('\n');
+        }
+
         function buildSolvePrompt() {
             return [
                 'Solve this system carefully and show concise steps.',
@@ -886,6 +908,12 @@
 
         function buildRatePrompt(userAnswers, correct, determinantsSummary, elapsedLabel) {
             const transcript = (transcriptFinal + transcriptInterim).trim() || '[no transcript captured]';
+            const notebookHistoryText = allowNotebook.checked
+                ? formatIndexedQuotedHistory(notebookHistory, '[notebook enabled but no strings recorded]')
+                : '[notebook disabled]';
+            const calculatorHistoryText = allowCalculator.checked
+                ? formatIndexedQuotedHistory(calculatorHistory, '[calculator enabled but no equations run]')
+                : '[calculator disabled]';
             return [
                 'Rate this chain of thought for equation solving quality.',
                 '',
@@ -895,11 +923,17 @@
                 '',
                 'User submitted: ' + userAnswers,
                 'Correct? ' + (correct ? 'Yes' : 'No'),
-            'Solve timer: ' + elapsedLabel,
+                'Solve timer (40 second average): ' + elapsedLabel,
                 'Determinants: ' + determinantsSummary,
                 '',
                 'Chain of thought transcript:',
                 transcript,
+                '',
+                'Scratch note history (every string ever in notebook):',
+                notebookHistoryText,
+                '',
+                'Calculator usage history (every equation run with =):',
+                calculatorHistoryText,
                 '',
                 'Please output:',
                 '1) Mistakes found',
@@ -907,7 +941,6 @@
                 '   - Mathematical correctness: Equation setup, transformations, and final arithmetic.',
                 '   - Reasoning clarity: Steps are understandable, ordered, and easy to follow.',
                 '   - Efficiency: Avoids unnecessary steps and reaches solution directly.',
-                '   - Verification discipline: Checks work (substitution/back-check/error checks).',
                 '   - Tool independence: Appropriate reliance on memory/mental math vs notebook/calculator.',
                 '   - Time effectiveness: Quality of reasoning relative to solve time.',
                 '   Provide an overall score (0-10) after category scores.',
@@ -1051,6 +1084,7 @@
         submitBtn.addEventListener('click', submitResults);
         notebookText.addEventListener('input', () => {
             notebookText.value = notebookText.value.slice(0, 10);
+            notebookHistory.push(notebookText.value);
         });
 
         calcGrid.addEventListener('click', (event) => {
