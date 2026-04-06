@@ -481,6 +481,19 @@
                 <div class="config-card">
                     <h3>[ MICROPHONE ]</h3>
                     <p class="subtitle" style="margin-top:0;">> Speech recognition: <span id="speechSupportText">checking...</span></p>
+                    <div class="field-wrap" style="max-width: 320px; margin-bottom: 8px;">
+                        <span>Speech language</span>
+                        <select id="speechLanguageSelect" aria-label="Speech recognition language selector">
+                            <option value="en-US">English (United States)</option>
+                            <option value="pl-PL">Polish (Poland)</option>
+                            <option value="de-DE">German (Germany)</option>
+                            <option value="fr-FR">Fre*ch (France)</option>
+                            <option value="es-ES">Spanish (Spain)</option>
+                            <option value="it-IT">Italian (Italy)</option>
+                            <option value="pt-PT">Portuguese (Portugal)</option>
+                            <option value="ja-JP">Japanese (Japan)</option>
+                        </select>
+                    </div>
                     <button class="btn warn" id="grantPermissionBtn" type="button">[ GRANT MIC / SPEECH ACCESS ]</button>
                     <div class="status" id="permissionStatus"></div>
                 </div>
@@ -611,6 +624,7 @@
         const strictIntegers = document.getElementById('strictIntegers');
 
         const speechSupportText = document.getElementById('speechSupportText');
+        const speechLanguageSelect = document.getElementById('speechLanguageSelect');
         const grantPermissionBtn = document.getElementById('grantPermissionBtn');
         const permissionStatus = document.getElementById('permissionStatus');
         const startSessionBtn = document.getElementById('startSessionBtn');
@@ -699,13 +713,14 @@
         function setupSpeech() {
             if (!recognition) {
                 speechSupportText.textContent = 'not supported in this browser';
+                speechLanguageSelect.disabled = true;
                 return;
             }
 
             speechSupportText.textContent = 'supported';
             recognition.continuous = true;
             recognition.interimResults = true;
-            recognition.lang = 'en-US';
+            recognition.lang = speechLanguageSelect.value;
 
             recognition.onresult = (event) => {
                 transcriptInterim = '';
@@ -1108,6 +1123,7 @@
                 solverStatus.textContent = 'Permission is required before starting.';
                 return;
             }
+            recognition.lang = speechLanguageSelect.value;
             listening = true;
             recognition.start();
             solverStatus.textContent = 'Listening is active. Solve the equation and submit when ready.';
