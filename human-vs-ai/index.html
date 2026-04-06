@@ -410,7 +410,7 @@
 
             <div class="gallery-grid">
                 <article class="square-panel">
-                    <h2>[ MATRIX BENCHMARK ]</h2>
+                    <h2>[ MATRIX ]</h2>
                     <pre class="ascii">+-------------------+
 | Select equation   |
 | matrix mode       |
@@ -445,7 +445,7 @@
                 </article>
 
                 <article class="square-panel">
-                    <h2>[ SECONDARY BENCHMARK ]</h2>
+                    <h2>[ TRIANGULAR NUMBERS ]</h2>
                     <pre class="ascii">+-------------------+
 | Triangular number |
 | equation challenge|
@@ -1276,7 +1276,7 @@
                 'Solve timer (' + averageLabel + '): ' + elapsedLabel,
                 'Determinants: ' + determinantsSummary,
                 '',
-                'Chain of thought transcript:',
+                'Chain of thought transcript (Account for slight errors in transcription):',
                 transcript,
                 '',
                 'Scratch note history (every string ever in notebook):',
@@ -1293,11 +1293,11 @@
                 'Please output:',
                 '1) Mistakes found',
                 '2) Category scores (0-10 each):',
-                '   - Mathematical correctness: Equation setup, transformations, and final arithmetic.',
-                '   - Reasoning clarity: Steps are understandable, ordered, and easy to follow.',
+                '   - Mathematical correctness: Equation setup, transformations, and final arithmetic. Account for  transcript inaccuracy and mumbling. Penalize for guessing and assuming things.',
+                '   - Reasoning clarity: Steps are sensible, thought out and the best choice of action.',
                 '   - Efficiency: Avoids unnecessary steps and reaches solution directly.',
                 '   - Tool independence: Appropriate reliance on memory/mental math vs notebook/calculator.',
-                '   - Time effectiveness: Quality of reasoning relative to solve time.',
+                '   - Calculation time: Time taken to calculate result compared to assumed average plus quality of reasoning relative to solve time.',
                 '   Provide an overall score (0-10) after category scores.',
                 '3) Three specific improvement actions',
                 'Write the response in the users primary reasoning language.'
