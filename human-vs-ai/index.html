@@ -77,6 +77,12 @@
             gap: 14px;
         }
 
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
         .square-panel {
             aspect-ratio: 1 / 1;
             border: 1px solid var(--line);
@@ -332,6 +338,26 @@
             color: var(--bad);
         }
 
+        .leaderboard-list {
+            margin: 0;
+            padding-left: 20px;
+            display: grid;
+            gap: 4px;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            line-height: 1.3;
+        }
+
+        .leaderboard-list strong {
+            color: var(--text);
+        }
+
+        .leaderboard-group-title {
+            margin: 0 0 4px;
+            color: var(--accent);
+            font-size: 0.85rem;
+        }
+
         .status {
             min-height: 22px;
             color: var(--warn);
@@ -345,6 +371,7 @@
 
         @media (max-width: 900px) {
             .grid-2,
+            .gallery-grid,
             .config-grid,
             .solver-grid,
             .results-grid {
@@ -362,32 +389,57 @@
     <main class="app">
         <section id="screen-main" class="screen active" aria-label="Main selection screen">
             <div class="titlebar">== HUMAN REASONING BENCHMARK :: MAIN MENU ==</div>
-            <p class="subtitle">> Select a benchmark mode.</p>
+            <p class="subtitle">> Select matrix dimension and enter the benchmark.</p>
 
-            <div class="grid-2">
+            <div class="gallery-grid">
                 <article class="square-panel">
-                    <h2>[ MODE_2D :: TWO-VARIABLE SYSTEM ]</h2>
+                    <h2>[ MATRIX BENCHMARK ]</h2>
                     <pre class="ascii">+-------------------+
-| ax + by = c       |
-| dx + ey = f       |
+| Select equation   |
+| matrix mode       |
 +-------------------+
-| Solve for x and y |
+| 2D / 3D / 4D      |
 +-------------------+</pre>
-                    <button class="btn" id="choose2d" type="button">[ ENTER 2D SOLVER ]</button>
+                    <div class="field-wrap">
+                        <span>Matrix dimension</span>
+                        <select id="modeSelect" aria-label="Equation mode selector">
+                            <option value="2d">2D: two-variable system</option>
+                            <option value="3d">3D: three-variable system</option>
+                            <option value="4d">4D: four-variable system</option>
+                        </select>
+                    </div>
+                    <button class="btn" id="enterSelectedMode" type="button">[ ENTER SELECTED SOLVER ]</button>
+                    <button class="btn" id="toggleLeaderboardBtn" type="button">[ TOGGLE LEADERBOARD ]</button>
+                    <div id="leaderboardWrap" class="terminal-box hidden" style="min-height: 0; overflow: auto;">
+                        <div id="leaderboardGroup2d">
+                            <p class="leaderboard-group-title">2D</p>
+                            <ol id="leaderboardList2d" class="leaderboard-list" aria-live="polite"></ol>
+                        </div>
+                        <div id="leaderboardGroup3d" class="hidden">
+                            <p class="leaderboard-group-title">3D</p>
+                            <ol id="leaderboardList3d" class="leaderboard-list" aria-live="polite"></ol>
+                        </div>
+                        <div id="leaderboardGroup4d" class="hidden">
+                            <p class="leaderboard-group-title">4D</p>
+                            <ol id="leaderboardList4d" class="leaderboard-list" aria-live="polite"></ol>
+                        </div>
+                    </div>
+                    <div class="status" id="leaderboardStatus"></div>
                 </article>
 
                 <article class="square-panel">
-                    <h2>[ MODE_3D :: THREE-VARIABLE SYSTEM ]</h2>
+                    <h2>[ COMING SOON ]</h2>
                     <pre class="ascii">+-------------------+
-| ax + by + cz = d  |
-| ex + fy + gz = h  |
-| ix + jy + kz = l  |
+| Extra benchmark   |
+| modes and tools   |
+| will land here    |
 +-------------------+
-| Solve for x y z   |
+| Stay tuned        |
 +-------------------+</pre>
-                    <button class="btn" id="choose3d" type="button">[ ENTER 3D SOLVER ]</button>
+                    <button class="btn" type="button" disabled>[ RESERVED SLOT ]</button>
                 </article>
             </div>
+
         </section>
 
         <section id="screen-config" class="screen" aria-label="Configuration screen">
@@ -501,7 +553,7 @@
                         <label class="ascii-checkbox"><input type="radio" name="provider" value="copilot"><span class="ascii-box" aria-hidden="true"></span>GITHUB COPILOT</label>
                         <label class="ascii-checkbox"><input type="radio" name="provider" value="grok"><span class="ascii-box" aria-hidden="true"></span>GROK</label>
                         <label class="ascii-checkbox"><input type="radio" name="provider" value="perplexity"><span class="ascii-box" aria-hidden="true"></span>PERPLEXITY</label>
-                        <label class="ascii-checkbox"><input type="radio" name="provider" value="chatgpt"><span class="ascii-box" aria-hidden="true"></span>CHATGPT <span class="tag bad">[DISCOURAGED]</span></label>
+                        <label class="ascii-checkbox"><input type="radio" name="provider" value="chatgpt"><span class="ascii-box" aria-hidden="true"></span>CHATGPT <span class="tag bad">[DISENCOURAGED]</span></label>
                     </div>
 
                     <div class="toolbar">
@@ -530,8 +582,8 @@
             results: document.getElementById('screen-results')
         };
 
-        const choose2d = document.getElementById('choose2d');
-        const choose3d = document.getElementById('choose3d');
+        const modeSelect = document.getElementById('modeSelect');
+        const enterSelectedMode = document.getElementById('enterSelectedMode');
         const backToMain = document.getElementById('backToMain');
         const backToMainFromResults = document.getElementById('backToMainFromResults');
 
@@ -566,6 +618,15 @@
         const copyRateBtn = document.getElementById('copyRateBtn');
         const copySolveBtn = document.getElementById('copySolveBtn');
         const newRoundBtn = document.getElementById('newRoundBtn');
+        const toggleLeaderboardBtn = document.getElementById('toggleLeaderboardBtn');
+        const leaderboardWrap = document.getElementById('leaderboardWrap');
+        const leaderboardGroup2d = document.getElementById('leaderboardGroup2d');
+        const leaderboardGroup3d = document.getElementById('leaderboardGroup3d');
+        const leaderboardGroup4d = document.getElementById('leaderboardGroup4d');
+        const leaderboardList2d = document.getElementById('leaderboardList2d');
+        const leaderboardList3d = document.getElementById('leaderboardList3d');
+        const leaderboardList4d = document.getElementById('leaderboardList4d');
+        const leaderboardStatus = document.getElementById('leaderboardStatus');
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         const recognition = SpeechRecognition ? new SpeechRecognition() : null;
@@ -657,6 +718,110 @@
             };
         }
 
+        function parseLeaderboardEntries(jsonData) {
+            const entries = [];
+
+            if (Array.isArray(jsonData)) {
+                jsonData.forEach((row) => {
+                    if (!row || typeof row !== 'object') {
+                        return;
+                    }
+                    const name = typeof row.name === 'string' ? row.name : typeof row.player === 'string' ? row.player : null;
+                    const scoreValue = Number(row.score);
+                    if (!name || !Number.isFinite(scoreValue)) {
+                        return;
+                    }
+                    entries.push({
+                        name,
+                        score: scoreValue
+                    });
+                });
+                return entries;
+            }
+
+            if (!jsonData || typeof jsonData !== 'object') {
+                return entries;
+            }
+
+            if (Array.isArray(jsonData.entries)) {
+                return entries.concat(parseLeaderboardEntries(jsonData.entries));
+            }
+
+            Object.entries(jsonData).forEach(([name, value]) => {
+                const scoreValue = Number(value);
+                if (!Number.isFinite(scoreValue)) {
+                    return;
+                }
+                entries.push({
+                    name,
+                    score: scoreValue
+                });
+            });
+
+            return entries;
+        }
+
+        function renderLeaderboardRows(listElement, entries) {
+            listElement.innerHTML = '';
+
+            if (!entries.length) {
+                const item = document.createElement('li');
+                item.textContent = 'No scores found.';
+                listElement.appendChild(item);
+                return;
+            }
+
+            entries.forEach((entry, index) => {
+                const item = document.createElement('li');
+                item.innerHTML = '<strong>#' + (index + 1) + ' ' + entry.name + '</strong> - ' + entry.score.toFixed(2);
+                listElement.appendChild(item);
+            });
+        }
+
+        async function loadModeLeaderboard(fileName, listElement) {
+            try {
+                const response = await fetch(fileName, { cache: 'no-store' });
+                if (!response.ok) {
+                    renderLeaderboardRows(listElement, []);
+                    return 0;
+                }
+                const payload = await response.json();
+                const entries = parseLeaderboardEntries(payload).sort((a, b) => b.score - a.score).slice(0, 5);
+                renderLeaderboardRows(listElement, entries);
+                return entries.length;
+            } catch (_error) {
+                renderLeaderboardRows(listElement, []);
+                return 0;
+            }
+        }
+
+        async function loadLeaderboard() {
+            leaderboardStatus.textContent = 'Loading 2D/3D/4D leaderboards...';
+
+            try {
+                await Promise.all([
+                    loadModeLeaderboard('matrix-2d.json', leaderboardList2d),
+                    loadModeLeaderboard('matrix-3d.json', leaderboardList3d),
+                    loadModeLeaderboard('matrix-4d.json', leaderboardList4d)
+                ]);
+
+                leaderboardStatus.textContent = '';
+            } catch (_error) {
+                renderLeaderboardRows(leaderboardList2d, []);
+                renderLeaderboardRows(leaderboardList3d, []);
+                renderLeaderboardRows(leaderboardList4d, []);
+                leaderboardStatus.textContent = 'Leaderboard load failed. Serve files through a local web server and retry.';
+            }
+        }
+
+        function showLeaderboardForSelectedMode() {
+            const selected = ['2d', '3d', '4d'].includes(modeSelect.value) ? modeSelect.value : '2d';
+
+            leaderboardGroup2d.classList.toggle('hidden', selected !== '2d');
+            leaderboardGroup3d.classList.toggle('hidden', selected !== '3d');
+            leaderboardGroup4d.classList.toggle('hidden', selected !== '4d');
+        }
+
         async function requestPermission() {
             if (!recognition) {
                 permissionStatus.textContent = 'Speech recognition is unavailable. Use a supported browser.';
@@ -680,6 +845,34 @@
 
         function det2(a, b, c, d) {
             return (a * d) - (b * c);
+        }
+
+        function determinant(matrix) {
+            const n = matrix.length;
+            if (n === 1) {
+                return matrix[0][0];
+            }
+            if (n === 2) {
+                return (matrix[0][0] * matrix[1][1]) - (matrix[0][1] * matrix[1][0]);
+            }
+
+            let result = 0;
+            for (let col = 0; col < n; col += 1) {
+                const minor = [];
+                for (let row = 1; row < n; row += 1) {
+                    const minorRow = [];
+                    for (let c = 0; c < n; c += 1) {
+                        if (c !== col) {
+                            minorRow.push(matrix[row][c]);
+                        }
+                    }
+                    minor.push(minorRow);
+                }
+                const sign = col % 2 === 0 ? 1 : -1;
+                result += sign * matrix[0][col] * determinant(minor);
+            }
+
+            return result;
         }
 
         function generate2D(allowNeg) {
@@ -715,6 +908,55 @@
             const d = m[1][0]; const e = m[1][1]; const f = m[1][2];
             const g = m[2][0]; const h = m[2][1]; const i = m[2][2];
             return (a * ((e * i) - (f * h))) - (b * ((d * i) - (f * g))) + (c * ((d * h) - (e * g)));
+        }
+
+        function generate4D(allowNeg) {
+            let m; let detMain;
+            do {
+                m = [
+                    [pickSigned(1, 5, allowNeg), pickSigned(1, 5, allowNeg), pickSigned(1, 5, allowNeg), pickSigned(1, 5, allowNeg)],
+                    [pickSigned(1, 5, allowNeg), pickSigned(1, 5, allowNeg), pickSigned(1, 5, allowNeg), pickSigned(1, 5, allowNeg)],
+                    [pickSigned(1, 5, allowNeg), pickSigned(1, 5, allowNeg), pickSigned(1, 5, allowNeg), pickSigned(1, 5, allowNeg)],
+                    [pickSigned(1, 5, allowNeg), pickSigned(1, 5, allowNeg), pickSigned(1, 5, allowNeg), pickSigned(1, 5, allowNeg)]
+                ];
+                detMain = determinant(m);
+            } while (detMain === 0);
+
+            const x = pickSigned(1, 3, allowNeg);
+            const y = pickSigned(1, 3, allowNeg);
+            const z = pickSigned(1, 3, allowNeg);
+            const v = pickSigned(1, 3, allowNeg);
+
+            const rhs = m.map((row) => (row[0] * x) + (row[1] * y) + (row[2] * z) + (row[3] * v));
+
+            const replaceColumn = (matrix, colIndex, values) => matrix.map((row, rowIndex) => {
+                const copy = [...row];
+                copy[colIndex] = values[rowIndex];
+                return copy;
+            });
+
+            const mx = replaceColumn(m, 0, rhs);
+            const my = replaceColumn(m, 1, rhs);
+            const mz = replaceColumn(m, 2, rhs);
+            const mv = replaceColumn(m, 3, rhs);
+
+            return {
+                mode: '4d',
+                equations: [
+                    m[0][0] + 'x + ' + m[0][1] + 'y + ' + m[0][2] + 'z + ' + m[0][3] + 'v = ' + rhs[0],
+                    m[1][0] + 'x + ' + m[1][1] + 'y + ' + m[1][2] + 'z + ' + m[1][3] + 'v = ' + rhs[1],
+                    m[2][0] + 'x + ' + m[2][1] + 'y + ' + m[2][2] + 'z + ' + m[2][3] + 'v = ' + rhs[2],
+                    m[3][0] + 'x + ' + m[3][1] + 'y + ' + m[3][2] + 'z + ' + m[3][3] + 'v = ' + rhs[3]
+                ],
+                answer: { x, y, z, v },
+                determinants: {
+                    w: detMain,
+                    wx: determinant(mx),
+                    wy: determinant(my),
+                    wz: determinant(mz),
+                    wv: determinant(mv)
+                }
+            };
         }
 
         function generate3D(allowNeg) {
@@ -761,7 +1003,7 @@
 
         function buildFields() {
             answerFields.innerHTML = '';
-            const vars = mode === '2d' ? ['x', 'y'] : ['x', 'y', 'z'];
+            const vars = mode === '2d' ? ['x', 'y'] : mode === '3d' ? ['x', 'y', 'z'] : ['x', 'y', 'z', 'v'];
             answerFields.className = mode === '2d' ? 'fields two' : 'fields';
             vars.forEach((key) => {
                 const wrap = document.createElement('div');
@@ -783,7 +1025,13 @@
         }
 
         function buildSession() {
-            session = mode === '2d' ? generate2D(allowNegatives.checked) : generate3D(allowNegatives.checked);
+            if (mode === '2d') {
+                session = generate2D(allowNegatives.checked);
+            } else if (mode === '3d') {
+                session = generate3D(allowNegatives.checked);
+            } else {
+                session = generate4D(allowNegatives.checked);
+            }
             equationText.textContent = session.equations.join('\n');
             buildFields();
             transcriptFinal = '';
@@ -918,7 +1166,7 @@
 
         function buildSolvePrompt() {
             return [
-                'Solve this system carefully and show concise steps.',
+                'Solve this system carefully using the matrix method',
                 'Mode: ' + session.mode.toUpperCase(),
                 '',
                 'Equations:',
@@ -1002,9 +1250,10 @@
 
             const x = parseInputValue('ans-x');
             const y = parseInputValue('ans-y');
-            const z = mode === '3d' ? parseInputValue('ans-z') : null;
+            const z = mode === '3d' || mode === '4d' ? parseInputValue('ans-z') : null;
+            const v = mode === '4d' ? parseInputValue('ans-v') : null;
 
-            if (x === null || y === null || (mode === '3d' && z === null)) {
+            if (x === null || y === null || ((mode === '3d' || mode === '4d') && z === null) || (mode === '4d' && v === null)) {
                 solverStatus.textContent = 'Please fill valid answer values.';
                 return;
             }
@@ -1018,17 +1267,24 @@
 
             const correct = mode === '2d'
                 ? (x === session.answer.x && y === session.answer.y)
-                : (x === session.answer.x && y === session.answer.y && z === session.answer.z);
+                : mode === '3d'
+                    ? (x === session.answer.x && y === session.answer.y && z === session.answer.z)
+                    : (x === session.answer.x && y === session.answer.y && z === session.answer.z && v === session.answer.v);
 
             const userAnswerText = mode === '2d'
                 ? 'x=' + x + ', y=' + y
-                : 'x=' + x + ', y=' + y + ', z=' + z;
+                : mode === '3d'
+                    ? 'x=' + x + ', y=' + y + ', z=' + z
+                    : 'x=' + x + ', y=' + y + ', z=' + z + ', v=' + v;
 
             const expectedText = mode === '2d'
                 ? 'x=' + session.answer.x + ', y=' + session.answer.y
-                : 'x=' + session.answer.x + ', y=' + session.answer.y + ', z=' + session.answer.z;
+                : mode === '3d'
+                    ? 'x=' + session.answer.x + ', y=' + session.answer.y + ', z=' + session.answer.z
+                    : 'x=' + session.answer.x + ', y=' + session.answer.y + ', z=' + session.answer.z + ', v=' + session.answer.v;
 
-            const detText = 'w=' + session.determinants.w + ', wx=' + session.determinants.wx + ', wy=' + session.determinants.wy;
+            const determinantPairs = Object.entries(session.determinants).map(([key, value]) => key + '=' + value);
+            const detText = determinantPairs.join(', ');
 
             answerSummary.textContent = [
                 'Submitted: ' + userAnswerText,
@@ -1037,9 +1293,7 @@
                 'Time:     ' + elapsedLabel,
                 '',
                 'Determinants',
-                'w  = ' + session.determinants.w,
-                'wx = ' + session.determinants.wx,
-                'wy = ' + session.determinants.wy
+                ...Object.entries(session.determinants).map(([key, value]) => key.padEnd(2, ' ') + ' = ' + value)
             ].join('\n');
 
             cotSummary.textContent = (transcriptFinal + transcriptInterim).trim() || '[no transcript captured]';
@@ -1070,15 +1324,12 @@
             showScreen('results');
         }
 
-        choose2d.addEventListener('click', () => {
-            mode = '2d';
+        enterSelectedMode.addEventListener('click', () => {
+            mode = ['2d', '3d', '4d'].includes(modeSelect.value) ? modeSelect.value : '2d';
             showScreen('config');
         });
 
-        choose3d.addEventListener('click', () => {
-            mode = '3d';
-            showScreen('config');
-        });
+        modeSelect.addEventListener('change', showLeaderboardForSelectedMode);
 
         backToMain.addEventListener('click', () => {
             stopListening();
@@ -1117,6 +1368,13 @@
             calcHandleKey(button.dataset.key);
         });
 
+        toggleLeaderboardBtn.addEventListener('click', () => {
+            leaderboardWrap.classList.toggle('hidden');
+            showLeaderboardForSelectedMode();
+        });
+
+        showLeaderboardForSelectedMode();
+        loadLeaderboard();
         setupSpeech();
         startSessionBtn.disabled = true;
     </script>
