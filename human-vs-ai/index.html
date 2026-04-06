@@ -348,6 +348,14 @@
             line-height: 1.3;
         }
 
+        .leaderboard-box {
+            white-space: normal;
+            height: 220px;
+            overflow-y: scroll;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+
         .leaderboard-list strong {
             color: var(--text);
         }
@@ -410,7 +418,7 @@
                     </div>
                     <button class="btn" id="enterSelectedMode" type="button">[ ENTER SELECTED SOLVER ]</button>
                     <button class="btn" id="toggleLeaderboardBtn" type="button">[ TOGGLE LEADERBOARD ]</button>
-                    <div id="leaderboardWrap" class="terminal-box hidden" style="min-height: 0; overflow: auto;">
+                    <div id="leaderboardWrap" class="terminal-box leaderboard-box hidden" style="min-height: 0;">
                         <div id="leaderboardGroup2d">
                             <p class="leaderboard-group-title">2D</p>
                             <ol id="leaderboardList2d" class="leaderboard-list" aria-live="polite"></ol>
@@ -727,13 +735,15 @@
                         return;
                     }
                     const name = typeof row.name === 'string' ? row.name : typeof row.player === 'string' ? row.player : null;
-                    const scoreValue = Number(row.score);
-                    if (!name || !Number.isFinite(scoreValue)) {
+                    const rawScore = row.score;
+                    const scoreValue = Number(rawScore);
+                    if (!name) {
                         return;
                     }
                     entries.push({
                         name,
-                        score: scoreValue
+                        score: Number.isFinite(scoreValue) ? scoreValue : null,
+                        scoreLabel: Number.isFinite(scoreValue) ? scoreValue.toFixed(1) : String(rawScore)
                     });
                 });
                 return entries;
@@ -749,12 +759,10 @@
 
             Object.entries(jsonData).forEach(([name, value]) => {
                 const scoreValue = Number(value);
-                if (!Number.isFinite(scoreValue)) {
-                    return;
-                }
                 entries.push({
                     name,
-                    score: scoreValue
+                    score: Number.isFinite(scoreValue) ? scoreValue : null,
+                    scoreLabel: Number.isFinite(scoreValue) ? scoreValue.toFixed(1) : String(value)
                 });
             });
 
@@ -773,20 +781,34 @@
 
             entries.forEach((entry, index) => {
                 const item = document.createElement('li');
-                item.innerHTML = '<strong>#' + (index + 1) + ' ' + entry.name + '</strong> - ' + entry.score.toFixed(2);
+                item.innerHTML = '<strong>#' + (index + 1) + ' ' + entry.name + '</strong> - ' + entry.scoreLabel;
                 listElement.appendChild(item);
             });
         }
 
         async function loadModeLeaderboard(fileName, listElement) {
             try {
-                const response = await fetch(fileName, { cache: 'no-store' });
+                const response = await fetch("https://raw.githubusercontent.com/NotCryptid/notcryptid.github.io/refs/heads/main/human-vs-ai/" + fileName, { cache: 'no-store' });
                 if (!response.ok) {
                     renderLeaderboardRows(listElement, []);
                     return 0;
                 }
                 const payload = await response.json();
-                const entries = parseLeaderboardEntries(payload).sort((a, b) => b.score - a.score).slice(0, 5);
+                const entries = parseLeaderboardEntries(payload).sort((a, b) => {
+                    const aIsNumber = a.score !== null;
+                    const bIsNumber = b.score !== null;
+
+                    if (aIsNumber && bIsNumber) {
+                        return b.score - a.score;
+                    }
+                    if (aIsNumber && !bIsNumber) {
+                        return -1;
+                    }
+                    if (!aIsNumber && bIsNumber) {
+                        return 1;
+                    }
+                    return a.name.localeCompare(b.name);
+                });
                 renderLeaderboardRows(listElement, entries);
                 return entries.length;
             } catch (_error) {
