@@ -498,6 +498,9 @@
                     <div class="provider-list">
                         <label class="ascii-checkbox"><input type="radio" name="provider" value="claude" checked><span class="ascii-box" aria-hidden="true"></span>CLAUDE <span class="tag">[RECOMMENDED]</span></label>
                         <label class="ascii-checkbox"><input type="radio" name="provider" value="gemini"><span class="ascii-box" aria-hidden="true"></span>GEMINI</label>
+                        <label class="ascii-checkbox"><input type="radio" name="provider" value="copilot"><span class="ascii-box" aria-hidden="true"></span>GITHUB COPILOT</label>
+                        <label class="ascii-checkbox"><input type="radio" name="provider" value="grok"><span class="ascii-box" aria-hidden="true"></span>GROK</label>
+                        <label class="ascii-checkbox"><input type="radio" name="provider" value="perplexity"><span class="ascii-box" aria-hidden="true"></span>PERPLEXITY</label>
                         <label class="ascii-checkbox"><input type="radio" name="provider" value="chatgpt"><span class="ascii-box" aria-hidden="true"></span>CHATGPT <span class="tag bad">[DISCOURAGED]</span></label>
                     </div>
 
@@ -848,6 +851,15 @@
             if (provider === 'gemini') {
                 return 'https://gemini.google.com/app';
             }
+            if (provider === 'copilot') {
+                return 'https://github.com/copilot?prompt=' + encoded;
+            }
+            if (provider === 'grok') {
+                return 'https://grok.com/?q=' + encoded;
+            }
+            if (provider === 'perplexity') {
+                return 'https://www.perplexity.ai/?q=' + encoded;
+            }
             if (provider === 'chatgpt') {
                 return 'https://chatgpt.com/?q=' + encoded;
             }
@@ -857,15 +869,25 @@
         async function openProviderPrompt(provider, prompt, actionLabel) {
             const url = providerUrl(provider, prompt);
 
-            if (provider === 'gemini') {
+            if (provider === 'gemini' || provider === 'copilot' || provider === 'grok') {
                 try {
                     await navigator.clipboard.writeText(prompt);
                     window.open(url, '_blank', 'noopener,noreferrer');
-                    resultStatus.textContent = 'Opened Gemini. Prompt copied to clipboard, paste it into Gemini.';
+                    const label = provider === 'gemini'
+                        ? 'Gemini'
+                        : provider === 'copilot'
+                            ? 'GitHub Copilot'
+                            : 'Grok';
+                    resultStatus.textContent = 'Opened ' + label + '. Prompt copied to clipboard, paste it into the chat input.';
                     return;
                 } catch (_error) {
                     window.open(url, '_blank', 'noopener,noreferrer');
-                    resultStatus.textContent = 'Opened Gemini. Copy prompt with the copy button if auto-copy was blocked.';
+                    const label = provider === 'gemini'
+                        ? 'Gemini'
+                        : provider === 'copilot'
+                            ? 'GitHub Copilot'
+                            : 'Grok';
+                    resultStatus.textContent = 'Opened ' + label + '. Copy prompt with the copy button if auto-copy was blocked.';
                     return;
                 }
             }
