@@ -239,6 +239,10 @@
             grid-template-columns: repeat(2, minmax(80px, 1fr));
         }
 
+        .fields.one {
+            grid-template-columns: minmax(140px, 1fr);
+        }
+
         .field-wrap {
             display: grid;
             gap: 6px;
@@ -409,7 +413,7 @@
 | 2D / 3D / 4D      |
 +-------------------+</pre>
                     <div class="field-wrap">
-                        <span>Matrix dimension</span>
+                        <span>Benchmark mode</span>
                         <select id="modeSelect" aria-label="Equation mode selector">
                             <option value="2d">2D: two-variable system</option>
                             <option value="3d">3D: three-variable system</option>
@@ -436,15 +440,15 @@
                 </article>
 
                 <article class="square-panel">
-                    <h2>[ COMING SOON ]</h2>
+                    <h2>[ SECONDARY BENCHMARK ]</h2>
                     <pre class="ascii">+-------------------+
-| Extra benchmark   |
-| modes and tools   |
-| will land here    |
+| Triangular number |
+| equation challenge|
+| solve for n       |
 +-------------------+
-| Stay tuned        |
+| T = n(n+1) / 2    |
 +-------------------+</pre>
-                    <button class="btn" type="button" disabled>[ RESERVED SLOT ]</button>
+                    <button class="btn" id="chooseTri" type="button">[ ENTER TRIANGULAR BENCHMARK ]</button>
                 </article>
             </div>
 
@@ -592,6 +596,7 @@
 
         const modeSelect = document.getElementById('modeSelect');
         const enterSelectedMode = document.getElementById('enterSelectedMode');
+        const chooseTri = document.getElementById('chooseTri');
         const backToMain = document.getElementById('backToMain');
         const backToMainFromResults = document.getElementById('backToMainFromResults');
 
@@ -842,6 +847,7 @@
             leaderboardGroup2d.classList.toggle('hidden', selected !== '2d');
             leaderboardGroup3d.classList.toggle('hidden', selected !== '3d');
             leaderboardGroup4d.classList.toggle('hidden', selected !== '4d');
+            leaderboardStatus.textContent = '';
         }
 
         async function requestPermission() {
@@ -1023,10 +1029,31 @@
             };
         }
 
+        function generateTriangular(_allowNeg) {
+            const n = randInt(2, 60);
+            const triangularValue = (n * (n + 1)) / 2;
+
+            return {
+                mode: 'tri',
+                equations: [
+                    'Triangular formula: T = n(n+1) / 2',
+                    'Given T = ' + triangularValue + ', solve for n.'
+                ],
+                answer: { n },
+                determinants: {}
+            };
+        }
+
         function buildFields() {
             answerFields.innerHTML = '';
-            const vars = mode === '2d' ? ['x', 'y'] : mode === '3d' ? ['x', 'y', 'z'] : ['x', 'y', 'z', 'v'];
-            answerFields.className = mode === '2d' ? 'fields two' : 'fields';
+            const vars = mode === '2d'
+                ? ['x', 'y']
+                : mode === '3d'
+                    ? ['x', 'y', 'z']
+                    : mode === '4d'
+                        ? ['x', 'y', 'z', 'v']
+                        : ['n'];
+            answerFields.className = mode === '2d' ? 'fields two' : mode === 'tri' ? 'fields one' : 'fields';
             vars.forEach((key) => {
                 const wrap = document.createElement('div');
                 wrap.className = 'field-wrap';
@@ -1051,8 +1078,10 @@
                 session = generate2D(allowNegatives.checked);
             } else if (mode === '3d') {
                 session = generate3D(allowNegatives.checked);
-            } else {
+            } else if (mode === '4d') {
                 session = generate4D(allowNegatives.checked);
+            } else {
+                session = generateTriangular(allowNegatives.checked);
             }
             equationText.textContent = session.equations.join('\n');
             buildFields();
@@ -1187,14 +1216,17 @@
         }
 
         function buildSolvePrompt() {
+            const openingLine = session.mode === 'tri'
+                ? 'Solve this triangular-number problem carefully and show concise steps.'
+                : 'Solve this system carefully using the matrix method';
             return [
-                'Solve this system carefully using the matrix method',
+                openingLine,
                 'Mode: ' + session.mode.toUpperCase(),
                 '',
                 'Equations:',
                 session.equations.join('\n'),
                 '',
-                'Return final answer values clearly.'
+                'Return final answer values clearly. Avoid the usage of tools (Math Tool, Python, Etc.)'
             ].join('\n');
         }
 
@@ -1206,6 +1238,11 @@
             const calculatorHistoryText = allowCalculator.checked
                 ? formatIndexedQuotedHistory(calculatorHistory, '[calculator enabled but no equations run]')
                 : '[calculator disabled]';
+            const averageLabel = mode === '4d'
+                ? '5 minute average'
+                : mode === '3d'
+                    ? '2 minute average'
+                    : '40 second average';
             return [
                 'Rate this chain of thought for equation solving quality.',
                 '',
@@ -1215,7 +1252,7 @@
                 '',
                 'User submitted: ' + userAnswers,
                 'Correct? ' + (correct ? 'Yes' : 'No'),
-                'Solve timer (40 second average): ' + elapsedLabel,
+                'Solve timer (' + averageLabel + '): ' + elapsedLabel,
                 'Determinants: ' + determinantsSummary,
                 '',
                 'Chain of thought transcript:',
@@ -1226,6 +1263,11 @@
                 '',
                 'Calculator usage history (every equation run with =):',
                 calculatorHistoryText,
+                '',
+                'Scoring rule for tool usage:',
+                '- Penalize excessive calculator use and excessive scratch-pad churn.',
+                '- Repeated low-value note edits or unnecessary calculator calls should reduce Tool independence and Efficiency scores.',
+                '- If over-reliance on tools materially drives the solve process, cap Tool independence at 4/10.',
                 '',
                 'Please output:',
                 '1) Mistakes found',
@@ -1267,6 +1309,62 @@
         function submitResults() {
             if (!session) {
                 solverStatus.textContent = 'No active session.';
+                return;
+            }
+
+            if (mode === 'tri') {
+                const nValue = parseInputValue('ans-n');
+                if (nValue === null) {
+                    solverStatus.textContent = 'Please fill valid answer values.';
+                    return;
+                }
+
+                stopListening();
+                if (sessionStartMs) {
+                    elapsedSeconds = Math.max(0, Math.round((Date.now() - sessionStartMs) / 1000));
+                }
+
+                const elapsedLabel = formatElapsed(elapsedSeconds);
+                const correct = nValue === session.answer.n;
+                const userAnswerText = 'n=' + nValue;
+                const expectedText = 'n=' + session.answer.n;
+
+                answerSummary.textContent = [
+                    'Submitted: ' + userAnswerText,
+                    'Expected:  ' + expectedText,
+                    'Result:    ' + (correct ? 'CORRECT' : 'INCORRECT'),
+                    'Time:     ' + elapsedLabel,
+                    '',
+                    'Formula',
+                    'T = n(n+1) / 2'
+                ].join('\n');
+
+                cotSummary.textContent = (transcriptFinal + transcriptInterim).trim() || '[no transcript captured]';
+
+                const solvePrompt = buildSolvePrompt();
+                const ratePrompt = buildRatePrompt(userAnswerText, correct, 'N/A', elapsedLabel);
+
+                openSolveBtn.onclick = async () => {
+                    await openProviderPrompt(
+                        selectedProvider(),
+                        solvePrompt,
+                        'Opened solve prompt in selected provider.'
+                    );
+                };
+
+                openRateBtn.onclick = async () => {
+                    await openProviderPrompt(
+                        selectedProvider(),
+                        ratePrompt,
+                        'Opened rating prompt in selected provider.'
+                    );
+                };
+
+                copySolveBtn.onclick = () => copyText(solvePrompt, 'Solve prompt');
+                copyRateBtn.onclick = () => copyText(ratePrompt, 'Rate prompt');
+
+                resultStatus.textContent = 'Results ready. Open or copy prompts.';
+                showScreen('results');
                 return;
             }
 
@@ -1348,6 +1446,11 @@
 
         enterSelectedMode.addEventListener('click', () => {
             mode = ['2d', '3d', '4d'].includes(modeSelect.value) ? modeSelect.value : '2d';
+            showScreen('config');
+        });
+
+        chooseTri.addEventListener('click', () => {
+            mode = 'tri';
             showScreen('config');
         });
 
