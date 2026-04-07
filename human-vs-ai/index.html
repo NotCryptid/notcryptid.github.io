@@ -1239,7 +1239,7 @@
         function buildSolvePrompt() {
             const openingLine = session.mode === 'tri'
                 ? 'Solve this triangular-number problem carefully and show concise steps.'
-                : 'Solve this system carefully using the matrix method';
+                : 'Solve this system carefully.';
             return [
                 openingLine,
                 'Mode: ' + session.mode.toUpperCase(),

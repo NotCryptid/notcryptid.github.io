@@ -7,6 +7,7 @@
     "Claude Sonnet 4.5 (Extended)": 6.1,
     "GPT-5-mini (Medium)": 6.1,
     "Gemini 2.5 Pro (Auto)": 4.8,
+    "phi-4-reasoning (Auto)": 4.8,
     "Claude Sonnet 4.6 (Auto)": "Disqualified",
     "GPT-5.3-codex (Medium)": "Disqualified",
     "Grok-Code-Fast-1 (Auto)": "Disqualified"
