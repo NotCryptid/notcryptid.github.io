@@ -439,7 +439,12 @@
           }
 
           active = true;
-          if (snapping) return;
+          // If user comes back over the element during bounce, let pointer control take over.
+          if (snapping) {
+            if (!nearElement) return;
+            stopSpring();
+            snapping = false;
+          }
 
           const cx = r.left + r.width / 2;
           const cy = r.top + r.height / 2;
