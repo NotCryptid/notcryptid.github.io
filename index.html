@@ -136,115 +136,26 @@
     pointer-events: none;
   }
 
-  /* Liquid Glass Effect */
   .liquid-glass {
     position: relative;
-    backdrop-filter: blur(2px) saturate(1.2);
-    -webkit-backdrop-filter: blur(2px) saturate(1.2);
+    z-index: 2;
   }
 
-  .liquid-glass-overlay {
+  .glass-content {
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.08) 0%,
-      rgba(255, 255, 255, 0.02) 50%,
-      rgba(255, 255, 255, 0.04) 100%
-    );
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
     pointer-events: none;
-    z-index: 1;
+    z-index: 3;
   }
 
-  .liquid-glass::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: 
-      linear-gradient(
-        145deg,
-        rgba(255, 255, 255, 0.2) 0%,
-        rgba(255, 255, 255, 0.04) 40%,
-        transparent 60%
-      ),
-      linear-gradient(
-        90deg,
-        rgba(255, 100, 100, 0.15) 0%,
-        rgba(255, 200, 100, 0.12) 15%,
-        rgba(200, 255, 100, 0.1) 30%,
-        transparent 50%,
-        rgba(100, 200, 255, 0.1) 70%,
-        rgba(150, 100, 255, 0.12) 85%,
-        rgba(255, 100, 200, 0.15) 100%
-      );
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask-composite: exclude;
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    padding: 1.5px;
-    pointer-events: none;
-  }
-
-  .liquid-glass-refraction {
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: 
-      linear-gradient(
-        135deg,
-        rgba(255, 120, 120, 0.14) 0%,
-        transparent 30%
-      ),
-      linear-gradient(
-        225deg,
-        rgba(120, 180, 255, 0.14) 0%,
-        transparent 30%
-      ),
-      linear-gradient(
-        315deg,
-        rgba(180, 120, 255, 0.14) 0%,
-        transparent 25%
-      ),
-      linear-gradient(
-        45deg,
-        rgba(120, 255, 180, 0.06) 0%,
-        transparent 25%
-      );
-    pointer-events: none;
-    z-index: 5;
-  }
-
-  .liquid-glass::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    box-shadow:
-      inset 0 1px 1px rgba(255, 255, 255, 0.25),
-      inset 0 -1px 2px rgba(0, 0, 0, 0.05),
-      inset 2px 0 3px rgba(255, 255, 255, 0.05),
-      inset -2px 0 3px rgba(255, 255, 255, 0.05),
-      0 8px 32px rgba(0, 0, 0, 0.12),
-      0 2px 8px rgba(0, 0, 0, 0.08);
-    pointer-events: none;
-  }
-
-  .liquid-glass-shine {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 60%;
-    height: 60%;
-    border-radius: inherit;
-    background: radial-gradient(
-      ellipse at top left,
-      rgba(255, 255, 255, 0) 0%,
-      rgba(255, 255, 255, 0) 30%,
-      transparent 100%
-    );
-    pointer-events: none;
+  .liquid-glass.surface-tension {
+    will-change: transform;
+    transform-origin: center;
+    transition: none;
   }
 
   .btn {
@@ -257,7 +168,7 @@
     will-change: transform;
   }
 
-  .btn:hover {
+  .btn:not(.surface-tension):hover {
     transform: scale(1.015);
     transition: transform 140ms ease;
   }
@@ -276,26 +187,335 @@
 </head>
 <body>
   <div class="stack">
-    <div class="pfp" style='background-image:url("./main-assets/pfp.png")'></div>
+   <div class="pfp" data-liquid-ignore style='background-image:url("./main-assets/pfp.png")'></div>
 
-    <div class="frame about-me liquid-glass" style='background-image:url("./main-assets/about-me.svg")'><div class="liquid-glass-overlay"></div><div class="liquid-glass-shine"></div><div class="liquid-glass-refraction"></div></div>
-    <div class="frame separator liquid-glass" style='background-image:url("./main-assets/separator.svg")'><div class="liquid-glass-overlay"></div><div class="liquid-glass-shine"></div><div class="liquid-glass-refraction"></div></div>
+   <div class="frame about-me liquid-glass surface-tension"><div class="glass-content" data-liquid-ignore style='background-image:url("./main-assets/about-me.svg")'></div></div>
+   <div class="frame separator liquid-glass surface-tension"><div class="glass-content" data-liquid-ignore style='background-image:url("./main-assets/separator.svg")'></div></div>
 
-    <a class="btn liquid-glass"
+   <a class="btn liquid-glass surface-tension"
        href="https://github.com/NotCryptid/MicroOS"
-       style='background-image:url("./main-assets/microos.svg")'><div class="liquid-glass-overlay"></div><div class="liquid-glass-shine"></div><div class="liquid-glass-refraction"></div></a>
+     ><div class="glass-content" data-liquid-ignore style='background-image:url("./main-assets/microos.svg")'></div></a>
 
-    <a class="btn liquid-glass"
+   <a class="btn liquid-glass surface-tension"
        href="https://github.com/Cryptidium"
-       style='background-image:url("./main-assets/cryptidium.svg")'><div class="liquid-glass-overlay"></div><div class="liquid-glass-shine"></div><div class="liquid-glass-refraction"></div></a>
+     ><div class="glass-content" data-liquid-ignore style='background-image:url("./main-assets/cryptidium.svg")'></div></a>
 
-    <a class="btn liquid-glass"
+   <a class="btn"
        href="https://claude.ai"
-       style='background-image:url("./main-assets/Claude%20Banner.svg")'><div class="liquid-glass-overlay"></div><div class="liquid-glass-shine"></div><div class="liquid-glass-refraction"></div></a>
+     data-liquid-ignore
+     style='background-image:url("./main-assets/Claude%20Banner.svg")'></a>
   </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/gh/naughtyduk/liquidGL@main/scripts/liquidGL.js" defer></script>
 
 <script>
   const delay = ms => new Promise(r => setTimeout(r, ms));
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const bootstrapLiquidGL = () => {
+      if (typeof window.liquidGL !== 'function') return false;
+
+      window.liquidGL({
+        snapshot: 'html',
+        target: '.liquid-glass',
+        resolution: 2,
+        refraction: 0.02,
+        bevelDepth: 0.08,
+        bevelWidth: 0.14,
+        frost: 0.8,
+        shadow: true,
+        specular: true,
+        reveal: 'none',
+        tilt: false,
+        magnify: 1
+      });
+
+      // Ensure targets render immediately with no opacity/transition fade.
+      document.querySelectorAll('.liquid-glass').forEach(el => {
+        el.style.opacity = '1';
+      });
+
+      // Keep anchors interactive after lens setup.
+      document.querySelectorAll('.btn.liquid-glass').forEach(el => {
+        el.style.pointerEvents = 'auto';
+      });
+
+      // liquidGL disables pointer events on targets; restore them for tension tracking.
+      const tensionElements = Array.from(document.querySelectorAll('.liquid-glass.surface-tension'));
+
+      tensionElements.forEach(el => {
+        el.style.pointerEvents = 'auto';
+      });
+
+      // Surface-tension interaction: stretch while close, snap back if pulled too far.
+      tensionElements.forEach(el => {
+        let snapping = false;
+        let canSnap = false;
+        let raf = null;
+        let active = false;
+        let latestPointer = null;
+        let springRaf = null;
+        let currentTx = 0;
+        let currentTy = 0;
+        let currentSx = 1;
+        let currentSy = 1;
+
+        const setTransform = (tx, ty, sx, sy) => {
+          currentTx = tx;
+          currentTy = ty;
+          currentSx = sx;
+          currentSy = sy;
+          el.style.transform = `translate3d(${tx}px, ${ty}px, 0) scaleX(${sx}) scaleY(${sy})`;
+        };
+
+        const stopSpring = () => {
+          if (!springRaf) return;
+          cancelAnimationFrame(springRaf);
+          springRaf = null;
+        };
+
+        const playElasticReturn = (tx, ty, sx, sy, profile = 'snap') => {
+          stopSpring();
+
+          snapping = true;
+          el.style.transition = '';
+
+          // Ensure there is enough displacement to show a visible recoil.
+          const minKick = profile === 'snap' ? 5.4 : 4.2;
+          if (Math.abs(tx) < minKick && Math.abs(ty) < minKick) {
+            if (Math.abs(tx) >= Math.abs(ty)) {
+              tx = (tx === 0 ? 1 : Math.sign(tx)) * minKick;
+            } else {
+              ty = (ty === 0 ? 1 : Math.sign(ty)) * minKick;
+            }
+          }
+
+          const minScaleKick = profile === 'snap' ? 0.022 : 0.016;
+          if (Math.abs(sx - 1) < minScaleKick) {
+            sx = sx >= 1 ? 1 + minScaleKick : 1 - minScaleKick;
+          }
+          if (Math.abs(sy - 1) < minScaleKick) {
+            sy = sy >= 1 ? 1 + minScaleKick : 1 - minScaleKick;
+          }
+
+          let x = tx;
+          let y = ty;
+          let xScale = sx;
+          let yScale = sy;
+
+          // Push initial velocity opposite the pull so energy visibly transfers across center.
+          let vx = -tx * (profile === 'snap' ? 16.2 : 11.4);
+          let vy = -ty * (profile === 'snap' ? 16.2 : 11.4);
+          let vsx = (1 - sx) * (profile === 'snap' ? 12.6 : 8.6);
+          let vsy = (1 - sy) * (profile === 'snap' ? 12.6 : 8.6);
+
+          const stiffness = profile === 'snap' ? 142 : 122;
+          const damping = profile === 'snap' ? 5.2 : 6.4;
+          const settlePos = 0.06;
+          const settleScale = 0.0012;
+          const settleVel = 0.03;
+          const maxDurationMs = profile === 'snap' ? 1250 : 1050;
+          const start = performance.now();
+          let last = performance.now();
+
+          const step = now => {
+            const dt = Math.min(0.033, (now - last) / 1000);
+            last = now;
+
+            const ax = -stiffness * x - damping * vx;
+            const ay = -stiffness * y - damping * vy;
+            const asx = -stiffness * (xScale - 1) - damping * vsx;
+            const asy = -stiffness * (yScale - 1) - damping * vsy;
+
+            vx += ax * dt;
+            vy += ay * dt;
+            vsx += asx * dt;
+            vsy += asy * dt;
+
+            x += vx * dt;
+            y += vy * dt;
+            xScale += vsx * dt;
+            yScale += vsy * dt;
+
+            setTransform(x, y, xScale, yScale);
+
+            const settled =
+              Math.abs(x) < settlePos &&
+              Math.abs(y) < settlePos &&
+              Math.abs(xScale - 1) < settleScale &&
+              Math.abs(yScale - 1) < settleScale &&
+              Math.abs(vx) < settleVel &&
+              Math.abs(vy) < settleVel &&
+              Math.abs(vsx) < settleVel &&
+              Math.abs(vsy) < settleVel;
+
+            const expired = (now - start) >= maxDurationMs;
+
+            if (settled || expired) {
+              springRaf = null;
+              snapping = false;
+              setTransform(0, 0, 1, 1);
+              return;
+            }
+
+            springRaf = requestAnimationFrame(step);
+          };
+
+          springRaf = requestAnimationFrame(step);
+        };
+
+        const resetTransform = (smooth = true) => {
+          if (raf) {
+            cancelAnimationFrame(raf);
+            raf = null;
+          }
+
+          // Never interrupt an active elastic return with a hard reset.
+          if (snapping) {
+            active = false;
+            canSnap = true;
+            return;
+          }
+
+          stopSpring();
+
+          if (smooth && !snapping) {
+            const hasTension =
+              Math.abs(currentTx) > 0.1 ||
+              Math.abs(currentTy) > 0.1 ||
+              Math.abs(currentSx - 1) > 0.001 ||
+              Math.abs(currentSy - 1) > 0.001;
+
+            if (hasTension) {
+              playElasticReturn(currentTx, currentTy, currentSx, currentSy, 'release');
+            } else {
+              snapping = false;
+              setTransform(0, 0, 1, 1);
+            }
+          } else {
+            el.style.transition = '';
+            snapping = false;
+            setTransform(0, 0, 1, 1);
+          }
+
+          active = false;
+          canSnap = true;
+        };
+
+        const animate = () => {
+          raf = null;
+          const e = latestPointer;
+          if (!e) return;
+
+          const r = el.getBoundingClientRect();
+          const edgeSlack = Math.max(22, Math.min(r.width, r.height) * 0.22);
+          const inX = e.clientX >= r.left - edgeSlack && e.clientX <= r.right + edgeSlack;
+          const inY = e.clientY >= r.top - edgeSlack && e.clientY <= r.bottom + edgeSlack;
+          const nearElement = inX && inY;
+
+          const outsideX = e.clientX < r.left
+            ? r.left - e.clientX
+            : e.clientX > r.right
+              ? e.clientX - r.right
+              : 0;
+          const outsideY = e.clientY < r.top
+            ? r.top - e.clientY
+            : e.clientY > r.bottom
+              ? e.clientY - r.bottom
+              : 0;
+          const outsideDistance = Math.hypot(outsideX, outsideY);
+          const insideOriginalBounds = outsideDistance === 0;
+
+          if (!active && !nearElement) {
+            return;
+          }
+
+          if (active && !nearElement) {
+            if (!snapping) {
+              resetTransform(true);
+            }
+            return;
+          }
+
+          active = true;
+          if (snapping) return;
+
+          const cx = r.left + r.width / 2;
+          const cy = r.top + r.height / 2;
+          const dx = e.clientX - cx;
+          const dy = e.clientY - cy;
+          const distance = Math.hypot(dx, dy);
+          const diagonal = Math.hypot(r.width, r.height);
+
+          const stretchLimit = Math.max(30, diagonal * 0.15);
+          const t = Math.min(1, distance / stretchLimit);
+          const eased = t * (2 - t);
+
+          // Outside the original bounds, blend in tension gradually to avoid cursor-lock jumps.
+          const outsideBlend = insideOriginalBounds
+            ? 1
+            : Math.pow(Math.max(0, 1 - (outsideDistance / Math.max(1, edgeSlack))), 2) * 0.48;
+          const tension = eased * outsideBlend;
+
+          const tx = dx * 0.06 * tension;
+          const ty = dy * 0.06 * tension;
+          const axisTotal = Math.abs(dx) + Math.abs(dy) + 1;
+          const stretchAmount = 0.06 * tension;
+          const sx = 1 + (Math.abs(dx) / axisTotal) * stretchAmount;
+          const sy = 1 + (Math.abs(dy) / axisTotal) * stretchAmount;
+
+          setTransform(tx, ty, sx, sy);
+
+          if (insideOriginalBounds) {
+            canSnap = true;
+          }
+
+          const breakSlack = Math.max(26, Math.min(r.width, r.height) * 0.2);
+          if (!insideOriginalBounds && canSnap && outsideDistance > breakSlack) {
+            canSnap = false;
+
+            // Ensure enough stored energy to produce visible opposite-side recoil.
+            const minSnapOffset = 2.8;
+            const snapTx = Math.abs(tx) < minSnapOffset
+              ? (dx === 0 ? 0 : Math.sign(dx) * minSnapOffset)
+              : tx;
+            const snapTy = Math.abs(ty) < minSnapOffset
+              ? (dy === 0 ? 0 : Math.sign(dy) * minSnapOffset)
+              : ty;
+
+            const scaleDeltaX = Math.abs(sx - 1);
+            const scaleDeltaY = Math.abs(sy - 1);
+            const minScaleDelta = 0.014;
+            const snapSx = scaleDeltaX < minScaleDelta
+              ? (sx >= 1 ? 1 + minScaleDelta : 1 - minScaleDelta)
+              : sx;
+            const snapSy = scaleDeltaY < minScaleDelta
+              ? (sy >= 1 ? 1 + minScaleDelta : 1 - minScaleDelta)
+              : sy;
+
+            playElasticReturn(snapTx, snapTy, snapSx, snapSy, 'snap');
+          }
+        };
+
+        window.addEventListener('pointermove', e => {
+          latestPointer = e;
+          if (raf) return;
+          raf = requestAnimationFrame(animate);
+        }, { passive: true });
+
+        window.addEventListener('pointerleave', () => resetTransform(true), { passive: true });
+        window.addEventListener('blur', () => resetTransform(false));
+      });
+
+      return true;
+    };
+
+    if (!bootstrapLiquidGL()) {
+      window.addEventListener('load', bootstrapLiquidGL, { once: true });
+    }
+  });
+
   document.querySelectorAll('.btn').forEach(el => {
     el.addEventListener('click', async e => {
       e.preventDefault();
