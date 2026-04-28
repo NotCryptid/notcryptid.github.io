@@ -1,8 +1,12 @@
 {
+    "gemma4:e2b (Medium)": 10.0,
     "Claude Haiku 4.5 (Auto)": 9.9,
+    "Gemini 3.1 Flash (High)": 9.8,
+    "Gemini 3.0 Flash (Low)": 9.6,
+    "Gemini 2.5 Flash (Low)": 9.4,
     "GPT-5.4-mini (Medium)": 9.4,
     "Gemini 3.1 Pro (Auto)": 9.1,
-    "cryptid": 8.8,
+    "Cryptid (Medium)": 8.8,
     "GPT-5.2 (Medium)": 8.6,
     "Claude Sonnet 4.5 (Extended)": 6.1,
     "GPT-5-mini (Medium)": 6.1,
