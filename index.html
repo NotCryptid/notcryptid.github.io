@@ -213,11 +213,10 @@
   const delay = ms => new Promise(r => setTimeout(r, ms));
 
   window.addEventListener('load', () => {
-    const isLinuxOrAndroid = navigator.userAgentData
-      ? /linux|android/i.test(navigator.userAgentData.platform)
-      : /linux|android/i.test(navigator.platform);
+    const _0x1f2a = window['\x6e\x61\x76\x69\x67\x61\x74\x6f\x72'];
+    const _0x3b4c = _0x1f2a['\x75\x73\x65\x72\x41\x67\x65\x6e\x74\x44\x61\x74\x61'] ? _0x1f2a['\x75\x73\x65\x72\x41\x67\x65\x6e\x74\x44\x61\x74\x61']['\x70\x6c\x61\x74\x66\x6f\x72\x6d'] : _0x1f2a['\x70\x6c\x61\x74\x66\x6f\x72\x6d'];
 
-    if (isLinuxOrAndroid) {
+    if (new RegExp(['\x6c\x69\x6e\x75\x78', '\x61\x6e\x64\x72\x6f\x69\x64'].join('\x7c'), '\x69').test(_0x3b4c)) {
       document.querySelectorAll('.liquid-glass').forEach(el => {
         el.classList.remove('liquid-glass', 'surface-tension');
         el.style.background = '#000';
