@@ -212,7 +212,24 @@
 <script>
   const delay = ms => new Promise(r => setTimeout(r, ms));
 
-  document.addEventListener('DOMContentLoaded', () => {
+  window.addEventListener('load', () => {
+    const isLinuxOrAndroid = navigator.userAgentData
+      ? /linux|android/i.test(navigator.userAgentData.platform)
+      : /linux|android/i.test(navigator.platform);
+
+    if (isLinuxOrAndroid) {
+      document.querySelectorAll('.liquid-glass').forEach(el => {
+        el.classList.remove('liquid-glass', 'surface-tension');
+        el.style.background = '#000';
+        el.style.borderRadius = '0';
+        el.style.opacity = '1';
+        el.style.pointerEvents = 'auto';
+        const content = el.querySelector('.glass-content');
+        if (content) content.style.display = 'none';
+      });
+      return;
+    }
+
     const bootstrapLiquidGL = () => {
       if (typeof window.liquidGL !== 'function') return false;
 
