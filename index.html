@@ -3,9 +3,6 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
-<meta name="theme-color" content="#000000" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <title>Cryptids Emporium</title>
 <script>
 (function(){var hasApple='ApplePaySession' in window;var hasGesture='GestureEvent' in window;var hasAI=!!window.ai;var isMobi=/Mobi|Android/i.test(navigator.userAgent);var c=document.createElement('canvas');var gl=c.getContext('webgl');var di=gl?gl.getExtension('WEBGL_debug_renderer_info'):null;var rend=di?gl.getParameter(di.UNMASKED_RENDERER_WEBGL):'';var hasANGLE=rend.includes('Direct3D')||rend.includes('D3D11')||rend.includes('vs_5_0');if(!hasApple&&hasANGLE&&hasAI){return}if(hasApple&&hasGesture&&!isMobi){return}if(hasApple&&hasAI&&!isMobi){return}if(hasApple&&isMobi){return}if(hasApple&&!hasAI&&!hasGesture&&!isMobi){s();return}if(!hasApple&&isMobi){f();return}if(!hasApple&&!hasANGLE){h();return}w();function gate(id,html){document.addEventListener('DOMContentLoaded',function(){document.body.style.display='none'});var d=document.createElement('div');d.id=id;d.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.92);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:#fff;padding:24px;box-sizing:border-box';d.innerHTML=html;document.documentElement.appendChild(d)}function w(){gate('browser-gate','<div style="max-width:440px;text-align:center;line-height:1.6"><div style="font-size:2.4rem;margin-bottom:8px">⚠</div><h2 style="margin:0 0 12px;font-size:1.25rem;font-weight:700">Unsupported Browser</h2><p style="margin:0 0 6px;font-size:.9rem;color:rgba(255,255,255,.75)">This site requires Chrome 148 on Windows.</p><p style="margin:0 0 20px;font-size:.85rem;color:rgba(255,255,255,.5)">Your current browser is not supported.</p><a href="https://www.google.com/chrome/" style="display:inline-block;padding:10px 22px;background:#fff;color:#000;border-radius:8px;text-decoration:none;font-size:.875rem;font-weight:600">Download Chrome 148</a></div>')}function s(){gate('safari-gate','<div style="max-width:440px;text-align:center;line-height:1.6"><div style="font-size:2.4rem;margin-bottom:8px">⚠</div><h2 style="margin:0 0 12px;font-size:1.25rem;font-weight:700">Unsupported Browser</h2><p style="margin:0 0 6px;font-size:.9rem;color:rgba(255,255,255,.75)">This site requires Safari or Chrome on macOS.</p><p style="margin:0 0 20px;font-size:.85rem;color:rgba(255,255,255,.5)">Firefox is not supported on this site.</p><a href="x-apple.systempreferences:" onclick="window.location.href=\'safari://\';return false" style="display:inline-block;padding:10px 22px;background:#fff;color:#000;border-radius:8px;text-decoration:none;font-size:.875rem;font-weight:600">Open Safari</a></div>')}function f(){gate('android-gate','<div style="max-width:440px;text-align:center;line-height:1.6"><div style="font-size:2.4rem;margin-bottom:8px">⚠</div><h2 style="margin:0 0 12px;font-size:1.25rem;font-weight:700">Unsupported Device</h2><p style="margin:0 0 6px;font-size:.9rem;color:rgba(255,255,255,.75)">This site is optimized for desktop and iOS devices.</p><p style="margin:0 0 20px;font-size:.85rem;color:rgba(255,255,255,.5)"><strong style="color:rgba(255,255,255,.8)">iPhone</strong> provides an excellent experience for this site.</p><a href="https://apple.com/iphone" style="display:inline-block;padding:10px 22px;background:#fff;color:#000;border-radius:8px;text-decoration:none;font-size:.875rem;font-weight:600">Explore iPhone</a></div>')}function h(){gate('linux-gate','<div style="max-width:440px;text-align:center;line-height:1.6"><div style="font-size:2.4rem;margin-bottom:8px">⚠</div><h2 style="margin:0 0 12px;font-size:1.25rem;font-weight:700">Unsupported Operating System</h2><p style="margin:0 0 6px;font-size:.9rem;color:rgba(255,255,255,.75)">This site is optimized for Windows and macOS.</p><p style="margin:0 0 20px;font-size:.85rem;color:rgba(255,255,255,.5)"><strong style="color:rgba(255,255,255,.8)">Windows 11</strong> provides an excellent experience for this site.</p><a href="https://www.microsoft.com/en-us/software-download/windows11" style="display:inline-block;padding:10px 22px;background:#fff;color:#000;border-radius:8px;text-decoration:none;font-size:.875rem;font-weight:600">Download Windows 11</a></div>')}})();
@@ -30,11 +27,11 @@
   * { box-sizing: border-box; }
 
   html, body {
-    height: 100dvh;
     margin: 0;
-    overflow: hidden;
+    padding: 0;
+    min-height: 100vh;
     overscroll-behavior: none;
-    background-color: #000;
+    touch-action: none;
   }
 
   html {
@@ -76,11 +73,7 @@
   }
 
   body {
-    background: transparent;
     -webkit-tap-highlight-color: transparent;
-  }
-
-  body {
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     display: grid;
     place-items: center;
@@ -231,23 +224,12 @@
 <script>
   const delay = ms => new Promise(r => setTimeout(r, ms));
 
+  // Prevent pinch-zoom on macOS Safari and iOS where touch-action fails
+  document.addEventListener('gesturestart', function(e) {
+    e.preventDefault();
+  });
+
   window.addEventListener('load', () => {
-    const _0x1f2a = window['\x6e\x61\x76\x69\x67\x61\x74\x6f\x72'];
-    const _0x3b4c = _0x1f2a['\x75\x73\x65\x72\x41\x67\x65\x6e\x74\x44\x61\x74\x61'] ? _0x1f2a['\x75\x73\x65\x72\x41\x67\x65\x6e\x74\x44\x61\x74\x61']['\x70\x6c\x61\x74\x66\x6f\x72\x6d'] : _0x1f2a['\x70\x6c\x61\x74\x66\x6f\x72\x6d'];
-
-    if (new RegExp(['\x6c\x69\x6e\x75\x78', '\x61\x6e\x64\x72\x6f\x69\x64'].join('\x7c'), '\x69').test(_0x3b4c)) {
-      document.querySelectorAll('.liquid-glass').forEach(el => {
-        el.classList.remove('liquid-glass', 'surface-tension');
-        el.style.background = '#000';
-        el.style.borderRadius = '0';
-        el.style.opacity = '1';
-        el.style.pointerEvents = 'auto';
-        const content = el.querySelector('.glass-content');
-        if (content) content.style.display = 'none';
-      });
-      return;
-    }
-
     const bootstrapLiquidGL = () => {
       if (typeof window.liquidGL !== 'function') return false;
 
