@@ -6,501 +6,840 @@
 <title>Cryptids Emporium</title>
 <link rel="icon" href="./main-assets/favicon.png" type="image/png" sizes="32x32" />
 <style>
-  :root {
-    --side-margin: 20px;
-    --gap: 8px;
-    --press-duration: 260ms;
-    --press-ease: cubic-bezier(.2,.7,.2,1.2);
+:root {
+  --side-margin: 20px;
+  --gap: 8px;
+  --press-duration: 260ms;
+  --press-ease: cubic-bezier(.2,.7,.2,1.2);
+  --frame-size: min(
+    calc(100vw - (2 * var(--side-margin))),
+    calc((100vh - (2 * var(--side-margin)) - (4 * var(--gap))) / 5)
+  );
+  --max-frame-width: 400px;
+  --radius: 18px;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+html {
+  background-color: #000;
+  background-image: url("./main-assets/Background.png");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+@media (max-width: 768px) and (orientation: portrait) {
+  html { background-image: url("./main-assets/Background-480p.png"); }
+}
+@media (max-width: 1024px) and (orientation: landscape) {
+  html { background-image: url("./main-assets/Background-720p.png"); }
+}
+@media (min-width: 769px) and (max-width: 1024px) and (orientation: portrait) {
+  html { background-image: url("./main-assets/Background-1080p.png"); }
+}
+@media (min-width: 1025px) {
+  html { background-image: url("./main-assets/Background-1440p.png"); }
+}
+@media (min-width: 1921px) {
+  html { background-image: url("./main-assets/Background-4K.png"); }
+}
+body {
+  -webkit-tap-highlight-color: transparent;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  display: grid;
+  place-items: center;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+}
+.stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap);
+  width: min(calc(100vw - (2 * var(--side-margin))), calc(var(--frame-size) * 2), var(--max-frame-width));
+}
+.pfp,
+.frame,
+.btn {
+  width: min(calc(var(--frame-size) * 2), var(--max-frame-width));
+  max-width: var(--max-frame-width);
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: 100% 100% !important;
+  position: relative;
+  overflow: hidden;
+  background-color: transparent;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  mask-image: radial-gradient(white, black);
+}
+.pfp {
+  height: min(calc(var(--frame-size) * 2 / 2.29), calc(var(--max-frame-width) / 2.29));
+  width: min(calc(var(--frame-size) * 2 / 2.29), calc(var(--max-frame-width) / 2.29));
+  max-width: calc(var(--max-frame-width) / 2.29);
+  max-height: calc(var(--max-frame-width) / 2.29);
+  background-size: cover !important;
+}
+.about-me { aspect-ratio: 2.29 / 1; }
+.separator { aspect-ratio: 12.62 / 1; }
+.btn { aspect-ratio: 4.11 / 1; }
+.pfp { border-radius: 9999px; }
+.frame, .btn { border-radius: var(--radius); }
+.frame::after,
+.btn::after,
+.pfp::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.28),
+    0 10px 30px rgba(0,0,0,.25);
+  border-radius: inherit;
+  pointer-events: none;
+}
+.liquid-glass {
+  position: relative;
+  z-index: 1000;
+}
+.glass-content {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-color: transparent;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  pointer-events: none;
+  z-index: 10;
+}
+.liquid-glass.surface-tension {
+  will-change: transform;
+  transform-origin: center;
+  transition: none;
+}
+.btn {
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  will-change: transform;
+}
+.btn:not(.surface-tension):hover {
+  transform: scale(1.015);
+  transition: transform 140ms ease;
+}
+.btn.pressed {
+  animation: press-bounce var(--press-duration) var(--press-ease);
+}
+@keyframes press-bounce {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(.94); }
+  60%  { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+#ai-chat {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 320px;
+  border-radius: 16px;
+  z-index: 1000;
+  color: white;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  background-color: transparent;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  mask-image: radial-gradient(white, black);
+  pointer-events: auto !important;
+}
+#ai-chat canvas {
+  pointer-events: none !important;
+}
+#ai-chat::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.28);
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 3;
+}
+#ai-chat-content {
+  position: relative;
+  z-index: 10;
+  pointer-events: auto !important; 
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+#ai-chat-header {
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+#ai-chat-messages {
+  height: 300px;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
 
-    --frame-size: min(
-      calc(100vw - (2 * var(--side-margin))),
-      calc((100vh - (2 * var(--side-margin)) - (4 * var(--gap))) / 5)
-    );
+/* ── Wrapper ensures actions appear OUTSIDE the bubble ── */
+.msg-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-bottom: 14px;
+}
+.msg-wrapper.user {
+  align-items: flex-end;
+}
+.msg-wrapper.ai {
+  align-items: flex-start;
+}
 
-    --max-frame-width: 400px;
-    --radius: 18px;
-  }
+.chat-msg {
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  max-width: 85%;
+  word-wrap: break-word;
+}
+.msg-wrapper.user .chat-msg {
+  background: rgba(255, 255, 255, 0.15);
+  border-bottom-right-radius: 4px;
+}
+.msg-wrapper.ai .chat-msg {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-bottom-left-radius: 4px;
+}
 
-  * { box-sizing: border-box; }
+/* ── Hidden by default Action Buttons for Messages ── */
+.msg-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 0 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  align-items: center;
+}
+.msg-wrapper.user .msg-actions { justify-content: flex-end; }
+.msg-wrapper.ai .msg-actions   { justify-content: flex-start; }
 
-  html, body {
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    overscroll-behavior: none;
-    touch-action: none;
-  }
+.msg-wrapper:hover .msg-actions { opacity: 1; }
 
-  html {
-    background-color: #000;
-    background-image: url("./main-assets/Background.png");
-    background-position: center;
-    background-size: cover;
-    background-repeat: no-repeat;
-  }
+@media (hover: none) {
+  .msg-actions { opacity: 1; }
+}
 
-  @media (max-width: 768px) and (orientation: portrait) {
-    html { background-image: url("./main-assets/Background-480p.png"); }
-  }
+.icon-action-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+  pointer-events: auto;
+}
+.icon-action-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+.icon-action-btn svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
 
-  @media (max-width: 1024px) and (orientation: landscape) {
-    html { background-image: url("./main-assets/Background-720p.png"); }
-  }
+.chat-meta {
+  font-size: 0.65rem;
+  color: rgba(255,255,255,0.4);
+  font-family: monospace;
+}
 
-  @media (min-width: 769px) and (max-width: 1024px) and (orientation: portrait) {
-    html { background-image: url("./main-assets/Background-1080p.png"); }
-  }
+.chat-action-btn {
+  background: rgba(255,255,255,0.1);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  cursor: pointer;
+  margin-top: 8px;
+  display: inline-block;
+  pointer-events: auto;
+}
+.chat-action-btn:hover { background: rgba(255,255,255,0.2); }
+.chat-header-actions { display: flex; gap: 10px; align-items: center; }
 
-  @media (min-width: 1025px) {
-    html { background-image: url("./main-assets/Background-1440p.png"); }
-  }
-
-  @media (min-width: 1921px) {
-    html { background-image: url("./main-assets/Background-4K.png"); }
-  }
-
-  body {
-    -webkit-tap-highlight-color: transparent;
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-    display: grid;
-    place-items: center;
-    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-  }
-
-  .stack {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--gap);
-    width: min(calc(100vw - (2 * var(--side-margin))), calc(var(--frame-size) * 2), var(--max-frame-width));
-  }
-
-  .pfp,
-  .frame,
-  .btn {
-    width: min(calc(var(--frame-size) * 2), var(--max-frame-width));
-    max-width: var(--max-frame-width);
-    background-position: center !important;
-    background-repeat: no-repeat !important;
-    background-size: 100% 100% !important;
-    position: relative;
-    overflow: hidden;
-    background-color: transparent;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    -webkit-transform: translate3d(0, 0, 0);
-    transform: translate3d(0, 0, 0);
-    -webkit-mask-image: -webkit-radial-gradient(white, black);
-    mask-image: radial-gradient(white, black);
-  }
-
-  .pfp {
-    height: min(calc(var(--frame-size) * 2 / 2.29), calc(var(--max-frame-width) / 2.29));
-    width: min(calc(var(--frame-size) * 2 / 2.29), calc(var(--max-frame-width) / 2.29));
-    max-width: calc(var(--max-frame-width) / 2.29);
-    max-height: calc(var(--max-frame-width) / 2.29);
-    background-size: cover !important;
-  }
-
-  .about-me { aspect-ratio: 2.29 / 1; }
-  .separator { aspect-ratio: 12.62 / 1; }
-  .btn { aspect-ratio: 4.11 / 1; }
-
-  .pfp { border-radius: 9999px; }
-  .frame, .btn { border-radius: var(--radius); }
-
-  .frame::after,
-  .btn::after,
-  .pfp::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    box-shadow:
-      inset 0 0 0 1px rgba(255,255,255,.28),
-      0 10px 30px rgba(0,0,0,.25);
-    border-radius: inherit;
-    pointer-events: none;
-  }
-
-  .liquid-glass {
-    position: relative;
-    z-index: 2;
-  }
-
-  .glass-content {
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-    background-color: transparent;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    pointer-events: none;
-    z-index: 3;
-  }
-
-  .liquid-glass.surface-tension {
-    will-change: transform;
-    transform-origin: center;
-    transition: none;
-  }
-
-  .btn {
-    cursor: pointer;
-    display: grid;
-    place-items: center;
-    text-decoration: none;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    will-change: transform;
-  }
-
-  .btn:not(.surface-tension):hover {
-    transform: scale(1.015);
-    transition: transform 140ms ease;
-  }
-
-  .btn.pressed {
-    animation: press-bounce var(--press-duration) var(--press-ease);
-  }
-
-  @keyframes press-bounce {
-    0%   { transform: scale(1); }
-    30%  { transform: scale(.94); }
-    60%  { transform: scale(1.03); }
-    100% { transform: scale(1); }
-  }
+#ai-chat-input-container {
+  padding: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+#ai-chat-input {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: white;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-family: inherit;
+  outline: none;
+  font-size: 0.85rem;
+  transition: border-color 0.2s;
+  pointer-events: auto;
+}
+#ai-chat-input:focus {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+.verbose-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  font-weight: normal;
+}
+.chat-model-dropdown {
+  background: rgba(0,0,0,0.5);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 0.8rem;
+  outline: none;
+  max-width: 140px;
+  pointer-events: auto;
+}
+.chat-model-dropdown option { background: #1a1a1a; }
 </style>
 </head>
 <body>
-  <div class="stack">
-   <div class="pfp" data-liquid-ignore style='background-image:url("./main-assets/pfp.png")'></div>
+<div class="stack">
+  <div class="pfp" data-liquid-ignore style='background-image:url("./main-assets/pfp.png")'></div>
+  <div class="frame about-me liquid-glass surface-tension"><div class="glass-content" data-liquid-ignore style='background-image:url("./main-assets/about-me.svg")'></div></div>
+  <div class="frame separator liquid-glass surface-tension"><div class="glass-content" data-liquid-ignore style='background-image:url("./main-assets/separator.svg")'></div></div>
+  <a class="btn liquid-glass surface-tension" href="https://github.com/NotCryptid/MicroOS"><div class="glass-content" data-liquid-ignore style='background-image:url("./main-assets/microos.svg")'></div></a>
+  <a class="btn liquid-glass surface-tension" href="https://github.com/Cryptidium"><div class="glass-content" data-liquid-ignore style='background-image:url("./main-assets/cryptidium.svg")'></div></a>
+  <a class="btn" href="https://claude.ai" data-liquid-ignore style='background-image:url("./main-assets/Claude%20Banner.svg")'></a>
+</div>
 
-   <div class="frame about-me liquid-glass surface-tension"><div class="glass-content" data-liquid-ignore style='background-image:url("./main-assets/about-me.svg")'></div></div>
-   <div class="frame separator liquid-glass surface-tension"><div class="glass-content" data-liquid-ignore style='background-image:url("./main-assets/separator.svg")'></div></div>
-
-   <a class="btn liquid-glass surface-tension"
-       href="https://github.com/NotCryptid/MicroOS"
-     ><div class="glass-content" data-liquid-ignore style='background-image:url("./main-assets/microos.svg")'></div></a>
-
-   <a class="btn liquid-glass surface-tension"
-       href="https://github.com/Cryptidium"
-     ><div class="glass-content" data-liquid-ignore style='background-image:url("./main-assets/cryptidium.svg")'></div></a>
-
-   <a class="btn"
-       href="https://claude.ai"
-     data-liquid-ignore
-     style='background-image:url("./main-assets/Claude%20Banner.svg")'></a>
-  </div>
+<script type="importmap">
+{
+  "imports": {
+    "ollama/browser": "https://esm.run/ollama/browser"
+  }
+}
+</script>
+<script type="module">
+  import ollama from 'ollama/browser';
+  window.ollamaClient = ollama;
+</script>
 
 <script>
-  const delay = ms => new Promise(r => setTimeout(r, ms));
+const delay = ms => new Promise(r => setTimeout(r, ms));
+document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
 
-  // Prevent pinch-zoom on macOS Safari and iOS where touch-action fails
-  document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
+(function() {
+  var canvas = document.createElement('canvas');
+  var gl     = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  var di     = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
+  var rend   = di ? gl.getParameter(di.UNMASKED_RENDERER_WEBGL) : '';
+  
+  // Feature detection
+  var hasUAD     = !!navigator.userAgentData; 
+  var hasApple   = 'ApplePaySession' in window || (rend && rend.includes('Apple')) || navigator.vendor === 'Apple Computer, Inc.';
+  var hasGesture = 'GestureEvent' in window;
+  var isMobi     = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  
+  var isSafariDesktop = hasApple && hasGesture && !isMobi;
+  var isIOS = hasApple && isMobi;
 
-  (function() {
-    // ── Detection ──────────────────────────────────────────────────────────
-    var hasApple   = 'ApplePaySession' in window;
-    var hasGesture = 'GestureEvent' in window;
-    var hasAI      = !!window.ai;
-    var isMobi     = /Mobi|Android/i.test(navigator.userAgent);
+  // ── Allow Rules ────────────────────────────────────────────────────────
+  // Only blocks based on browser type, absolutely ignores `window.ai` state
+  if (hasUAD && !isMobi) return;  // Allow Chromium Desktop browsers
+  if (isSafariDesktop) return;    // Allow Safari Desktop
+  if (isIOS) return;              // Allow iOS
 
-    var canvas = document.createElement('canvas');
-    var gl     = canvas.getContext('webgl');
-    var di     = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
-    var rend   = di ? gl.getParameter(di.UNMASKED_RENDERER_WEBGL) : '';
-    var hasANGLE = rend.includes('Direct3D') || rend.includes('D3D11') || rend.includes('D3D9') || rend.includes('vs_5_0');
+  // ── Block Rules ────────────────────────────────────────────────────────
+  var gateId, gateHTML;
+  var btnStyle = 'display:inline-block;padding:10px 22px;background:#fff;color:#000;border-radius:8px;text-decoration:none;font-size:.875rem;font-weight:600;margin:4px';
 
-    // ── Allow rules ────────────────────────────────────────────────────────
-    // Windows Chrome or Edge (ANGLE confirms Windows, or AI flag enabled)
-    if (!hasApple && !isMobi && (hasANGLE || hasAI)) return;
-    // macOS Safari
-    if (hasApple && hasGesture && !isMobi) return;
-    // macOS Chrome
-    if (hasApple && hasAI && !isMobi) return;
-    // iOS Safari
-    if (hasApple && isMobi) return;
-
-    // ── Block: determine which gate ────────────────────────────────────────
-    var gateId, gateHTML;
-    var btnStyle = 'display:inline-block;padding:10px 22px;background:#fff;color:#000;border-radius:8px;text-decoration:none;font-size:.875rem;font-weight:600;margin:4px';
-    var linkStyle = 'color:rgba(255,255,255,.55);font-size:.8rem;display:block;margin-top:6px;text-decoration:underline;cursor:pointer';
-
-    if (hasApple && !hasAI && !hasGesture && !isMobi) {
-      // macOS Firefox
-      gateId = 'safari-gate';
-      gateHTML = '<div style="max-width:460px;text-align:center;line-height:1.6">'
-        + '<div style="font-size:2.4rem;margin-bottom:8px">⚠</div>'
-        + '<h2 style="margin:0 0 12px;font-size:1.25rem;font-weight:700">Unsupported Browser</h2>'
-        + '<p style="margin:0 0 6px;font-size:.9rem;color:rgba(255,255,255,.75)">This site requires Safari or Chrome on macOS.</p>'
-        + '<p style="margin:0 0 20px;font-size:.85rem;color:rgba(255,255,255,.5)">Firefox is not supported.</p>'
-        + '<button id="open-safari-btn" style="' + btnStyle + ';border:none;cursor:pointer">Open Safari</button>'
-        + '</div>';
-    } else if (!hasApple && isMobi) {
-      // Android
-      gateId = 'android-gate';
-      gateHTML = '<div style="max-width:440px;text-align:center;line-height:1.6">'
-        + '<div style="font-size:2.4rem;margin-bottom:8px">⚠</div>'
-        + '<h2 style="margin:0 0 12px;font-size:1.25rem;font-weight:700">Unsupported Device</h2>'
-        + '<p style="margin:0 0 6px;font-size:.9rem;color:rgba(255,255,255,.75)">This site is optimized for desktop and iOS devices.</p>'
-        + '<p style="margin:0 0 20px;font-size:.85rem;color:rgba(255,255,255,.5)"><strong style="color:rgba(255,255,255,.8)">iPhone</strong> provides an excellent experience.</p>'
-        + '<a href="https://apple.com/iphone" style="' + btnStyle + '">Explore iPhone</a>'
-        + '</div>';
-    } else if (!hasApple && !hasANGLE) {
-      // Linux
-      gateId = 'linux-gate';
-      gateHTML = '<div style="max-width:440px;text-align:center;line-height:1.6">'
-        + '<div style="font-size:2.4rem;margin-bottom:8px">⚠</div>'
-        + '<h2 style="margin:0 0 12px;font-size:1.25rem;font-weight:700">Unsupported Operating System</h2>'
-        + '<p style="margin:0 0 6px;font-size:.9rem;color:rgba(255,255,255,.75)">This site is optimized for Windows and macOS.</p>'
-        + '<p style="margin:0 0 20px;font-size:.85rem;color:rgba(255,255,255,.5)"><strong style="color:rgba(255,255,255,.8)">Windows 11</strong> provides an excellent experience.</p>'
-        + '<a href="https://www.microsoft.com/en-us/software-download/windows11" style="' + btnStyle + '">Download Windows 11</a>'
-        + '</div>';
-    } else {
-      // Windows but not Chrome (no ANGLE would have been caught above, so this shouldn't hit — safety fallback)
-      gateId = 'browser-gate';
-      gateHTML = '<div style="max-width:460px;text-align:center;line-height:1.6">'
-        + '<div style="font-size:2.4rem;margin-bottom:8px">⚠</div>'
-        + '<h2 style="margin:0 0 12px;font-size:1.25rem;font-weight:700">Unsupported Browser</h2>'
-        + '<p style="margin:0 0 6px;font-size:.9rem;color:rgba(255,255,255,.75)">This site requires Chrome on Windows.</p>'
-        + '<p style="margin:0 0 20px;font-size:.85rem;color:rgba(255,255,255,.5)">Your current browser is not supported.</p>'
-        + '<a href="https://www.google.com/chrome/" style="' + btnStyle + '">Download Chrome 148</a>'
-        + '<div style="margin-top:20px;font-size:.85rem;color:rgba(255,255,255,.75)">Already using Chrome or Edge? Enable AI features:</div>'
-        + '<a href="chrome://flags/#optimization-guide-on-device-model" style="' + linkStyle + '">chrome://flags/#optimization-guide-on-device-model</a>'
-        + '<a href="edge://flags/#optimization-guide-on-device-model" style="' + linkStyle + '">edge://flags/#optimization-guide-on-device-model</a>'
-        + '</div>';
-    }
-
-    // ── Wipe site content, skip liquidGL ──────────────────────────────────
-    // Remove the main stack immediately so it never flashes
-    var stack = document.querySelector('.stack');
-    if (stack) stack.remove();
-
-    // Prevent deferred liquidGL scripts from doing anything
-    // by removing them before they execute (they're defer, so DOM is ready)
-    document.querySelectorAll('script[src*="liquidGL"], script[src*="html2canvas"]').forEach(function(s) { s.remove(); });
-
-    // ── Inject gate overlay ───────────────────────────────────────────────
-    var overlay = document.createElement('div');
-    overlay.id = gateId;
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.92);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:#fff;padding:24px;box-sizing:border-box';
-    overlay.innerHTML = gateHTML;
-    document.body.appendChild(overlay);
-
-    // Safari button handler (can't use href="safari://" inline due to quoting)
-    if (gateId === 'safari-gate') {
-      document.addEventListener('DOMContentLoaded', function() {
-        var btn = document.getElementById('open-safari-btn');
-        if (btn) btn.addEventListener('click', function() { window.location.href = 'safari://'; });
-      });
-      // Also fire immediately in case DOMContentLoaded already fired
-      var btn = document.getElementById('open-safari-btn');
-      if (btn) btn.addEventListener('click', function() { window.location.href = 'safari://'; });
-    }
-  })();
-
-  // ── Main site init (only runs if not blocked) ─────────────────────────
-  function loadSite() {
-    var html2canvasScript = document.createElement('script');
-    html2canvasScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-    document.head.appendChild(html2canvasScript);
-
-    var liquidScript = document.createElement('script');
-    liquidScript.src = 'https://cdn.jsdelivr.net/gh/naughtyduk/liquidGL@main/scripts/liquidGL.js';
-    liquidScript.onload = function() { bootstrapLiquidGL(); };
-    document.head.appendChild(liquidScript);
+  if (!hasUAD && !isSafariDesktop && !isIOS) {
+    gateId = 'browser-gate';
+    gateHTML = '<div style="max-width:460px;text-align:center;line-height:1.6">'
+      + '<div style="font-size:2.4rem;margin-bottom:8px">⚠</div>'
+      + '<h2 style="margin:0 0 12px;font-size:1.25rem;font-weight:700">Unsupported Browser</h2>'
+      + '<p style="margin:0 0 20px;font-size:.9rem;color:rgba(255,255,255,.75)">This site requires Chrome, Edge, or Safari.</p>'
+      + '<a href="https://www.google.com/chrome/" style="' + btnStyle + '">Download Chrome</a>'
+      + '</div>';
+  } else if (isMobi && !hasApple) {
+    gateId = 'android-gate';
+    gateHTML = '<div style="max-width:440px;text-align:center;line-height:1.6">'
+      + '<div style="font-size:2.4rem;margin-bottom:8px">⚠</div>'
+      + '<h2 style="margin:0 0 12px;font-size:1.25rem;font-weight:700">Unsupported Device</h2>'
+      + '<p style="margin:0 0 6px;font-size:.9rem;color:rgba(255,255,255,.75)">This site is optimized for desktop and iOS devices.</p>'
+      + '<a href="https://apple.com/iphone" style="' + btnStyle + '">Explore iPhone</a>'
+      + '</div>';
+  } else {
+    gateId = 'generic-gate';
+    gateHTML = '<div style="max-width:460px;text-align:center;line-height:1.6">'
+      + '<h2 style="margin:0 0 12px;font-size:1.25rem;font-weight:700">Unsupported Environment</h2>'
+      + '</div>';
   }
 
-  function bootstrapLiquidGL() {
-    if (typeof window.liquidGL !== 'function') return;
+  var stack = document.querySelector('.stack');
+  if (stack) stack.remove();
+  document.querySelectorAll('script[src*="liquidGL"], script[src*="html2canvas"]').forEach(function(s) { s.remove(); });
 
-    window.liquidGL({
-      snapshot: 'html',
-      target: '.liquid-glass',
-      resolution: 2,
-      refraction: 0.02,
-      bevelDepth: 0.08,
-      bevelWidth: 0.14,
-      frost: 0.8,
-      shadow: true,
-      specular: true,
-      reveal: 'none',
-      tilt: false,
-      magnify: 1
-    });
+  var overlay = document.createElement('div');
+  overlay.id = gateId;
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.92);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:#fff;padding:24px;box-sizing:border-box';
+  overlay.innerHTML = gateHTML;
+  document.body.appendChild(overlay);
+})();
 
-    document.querySelectorAll('.liquid-glass').forEach(function(el) {
-      el.style.opacity = '1';
-    });
+function loadSite() {
+  var html2canvasScript = document.createElement('script');
+  html2canvasScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+  document.head.appendChild(html2canvasScript);
 
-    document.querySelectorAll('.btn.liquid-glass').forEach(function(el) {
-      el.style.pointerEvents = 'auto';
-    });
+  var liquidScript = document.createElement('script');
+  liquidScript.src = 'https://cdn.jsdelivr.net/gh/naughtyduk/liquidGL@main/scripts/liquidGL.js';
+  liquidScript.onload = function() { bootstrapLiquidGL(); };
+  document.head.appendChild(liquidScript);
 
-    var tensionElements = Array.from(document.querySelectorAll('.liquid-glass.surface-tension'));
-    tensionElements.forEach(function(el) { el.style.pointerEvents = 'auto'; });
+  if (!(('ontouchstart' in window) || (navigator.maxTouchPoints > 0))) {
+    
+    var isSafari = ('GestureEvent' in window) && !('chrome' in window);
+    var builtinApiName = isSafari ? "None" : "Gemini Nano";
 
-    tensionElements.forEach(function(el) {
-      let snapping = false;
-      let canSnap = false;
-      let raf = null;
-      let active = false;
-      let latestPointer = null;
-      let springRaf = null;
-      let currentTx = 0, currentTy = 0, currentSx = 1, currentSy = 1;
+    // SVG Icons
+    const SVG_EDIT = '<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';
+    const SVG_REGEN = '<svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>';
 
-      const setTransform = (tx, ty, sx, sy) => {
-        currentTx = tx; currentTy = ty; currentSx = sx; currentSy = sy;
-        el.style.transform = `translate3d(${tx}px, ${ty}px, 0) scaleX(${sx}) scaleY(${sy})`;
-      };
+    var chatUI = document.createElement('div');
+    chatUI.id = 'ai-chat';
+    chatUI.className = 'liquid-glass';
+    chatUI.innerHTML = `
+      <div id="ai-chat-content" data-liquid-ignore>
+        <div id="ai-chat-header">
+          <select id="ai-model-select" class="chat-model-dropdown">
+            <option value="builtin">${builtinApiName}</option>
+          </select>
+          <div class="chat-header-actions">
+            <label class="verbose-toggle"><input type="checkbox" id="verbose-checkbox"> Verbose</label>
+            <button id="ai-chat-clear" class="chat-action-btn" style="margin-top:0;">Clear</button>
+          </div>
+        </div>
+        <div id="ai-chat-messages"></div>
+        <div id="ai-chat-input-container">
+          <input type="text" id="ai-chat-input" autocomplete="off" placeholder="Message..." />
+        </div>
+      </div>
+    `;
+    document.body.appendChild(chatUI);
 
-      const stopSpring = () => {
-        if (!springRaf) return;
-        cancelAnimationFrame(springRaf);
-        springRaf = null;
-      };
+    var select = document.getElementById('ai-model-select');
+    var input = document.getElementById('ai-chat-input');
+    var msgs = document.getElementById('ai-chat-messages');
+    var verboseCb = document.getElementById('verbose-checkbox');
 
-      const playElasticReturn = (tx, ty, sx, sy, profile = 'snap') => {
-        stopSpring();
-        snapping = true;
-        el.style.transition = '';
-
-        const minKick = profile === 'snap' ? 5.4 : 4.2;
-        if (Math.abs(tx) < minKick && Math.abs(ty) < minKick) {
-          if (Math.abs(tx) >= Math.abs(ty)) tx = (tx === 0 ? 1 : Math.sign(tx)) * minKick;
-          else ty = (ty === 0 ? 1 : Math.sign(ty)) * minKick;
+    (async function fetchOllamaModels() {
+      while (!window.ollamaClient) { await new Promise(r => setTimeout(r, 50)); }
+      try {
+        let res = await window.ollamaClient.list();
+        if (res && res.models) {
+          res.models.forEach(m => {
+            let opt = document.createElement('option');
+            opt.value = 'ollama:' + m.name;
+            opt.textContent = m.name + ' (Ollama)';
+            select.appendChild(opt);
+          });
         }
+      } catch(e) {}
+    })();
 
-        const minScaleKick = profile === 'snap' ? 0.022 : 0.016;
-        if (Math.abs(sx - 1) < minScaleKick) sx = sx >= 1 ? 1 + minScaleKick : 1 - minScaleKick;
-        if (Math.abs(sy - 1) < minScaleKick) sy = sy >= 1 ? 1 + minScaleKick : 1 - minScaleKick;
+    var aiSession = null;
+    var lastUserText = "";
+    var lastUserWrapper = null;
+    var lastAiWrapper = null;
 
-        let x = tx, y = ty, xScale = sx, yScale = sy;
-        let vx = -tx * (profile === 'snap' ? 16.2 : 11.4);
-        let vy = -ty * (profile === 'snap' ? 16.2 : 11.4);
-        let vsx = (1 - sx) * (profile === 'snap' ? 12.6 : 8.6);
-        let vsy = (1 - sy) * (profile === 'snap' ? 12.6 : 8.6);
+    document.getElementById('ai-chat-clear').onclick = function() {
+      msgs.innerHTML = '';
+      lastUserText = '';
+      lastUserWrapper = null;
+      lastAiWrapper = null;
+      if (aiSession && aiSession.destroy) aiSession.destroy();
+      aiSession = null;
+    };
 
-        const stiffness = profile === 'snap' ? 142 : 122;
-        const damping = profile === 'snap' ? 5.2 : 6.4;
-        const settlePos = 0.06, settleScale = 0.0012, settleVel = 0.03;
-        const maxDurationMs = profile === 'snap' ? 1250 : 1050;
-        const start = performance.now();
-        let last = performance.now();
+    async function triggerAI(textToPrompt, isRegen = false) {
+      
+      if (isRegen && lastAiWrapper && lastAiWrapper.parentElement) {
+        lastAiWrapper.remove();
+      }
+      
+      document.querySelectorAll('.regen-btn-container').forEach(b => b.remove());
 
-        const step = now => {
-          const dt = Math.min(0.033, (now - last) / 1000);
-          last = now;
-          vx += (-stiffness * x - damping * vx) * dt;
-          vy += (-stiffness * y - damping * vy) * dt;
-          vsx += (-stiffness * (xScale - 1) - damping * vsx) * dt;
-          vsy += (-stiffness * (yScale - 1) - damping * vsy) * dt;
-          x += vx * dt; y += vy * dt; xScale += vsx * dt; yScale += vsy * dt;
-          setTransform(x, y, xScale, yScale);
+      var aiWrapper = document.createElement('div');
+      aiWrapper.className = 'msg-wrapper ai';
+      
+      var aiDiv = document.createElement('div');
+      aiDiv.className = 'chat-msg';
+      var textSpan = document.createElement('span');
+      textSpan.textContent = '...';
+      
+      aiDiv.appendChild(textSpan);
+      aiWrapper.appendChild(aiDiv);
+      msgs.appendChild(aiWrapper);
+      
+      lastAiWrapper = aiWrapper;
+      msgs.scrollTop = msgs.scrollHeight;
 
-          const settled = Math.abs(x) < settlePos && Math.abs(y) < settlePos
-            && Math.abs(xScale - 1) < settleScale && Math.abs(yScale - 1) < settleScale
-            && Math.abs(vx) < settleVel && Math.abs(vy) < settleVel
-            && Math.abs(vsx) < settleVel && Math.abs(vsy) < settleVel;
+      var startTime = performance.now();
+      var finalResponse = '';
+      var selectedModel = select.value;
 
-          if (settled || (now - start) >= maxDurationMs) {
-            springRaf = null; snapping = false; setTransform(0, 0, 1, 1); return;
+      try {
+        if (selectedModel === 'builtin') {
+          if (builtinApiName === 'None') throw new Error("No built-in AI model is available on this browser.");
+
+          // Exact implementation from official Chrome Labs web-ai-demos
+          if (!('ai' in window) || !('languageModel' in window.ai)) {
+             throw new Error("window.ai.languageModel is missing. Check chrome://flags#prompt-api-for-gemini-nano.");
           }
-          springRaf = requestAnimationFrame(step);
-        };
-        springRaf = requestAnimationFrame(step);
-      };
 
-      const resetTransform = (smooth = true) => {
-        if (raf) { cancelAnimationFrame(raf); raf = null; }
-        if (snapping) { active = false; canSnap = true; return; }
-        stopSpring();
-        if (smooth) {
-          const hasTension = Math.abs(currentTx) > 0.1 || Math.abs(currentTy) > 0.1
-            || Math.abs(currentSx - 1) > 0.001 || Math.abs(currentSy - 1) > 0.001;
-          if (hasTension) playElasticReturn(currentTx, currentTy, currentSx, currentSy, 'release');
-          else { snapping = false; setTransform(0, 0, 1, 1); }
-        } else {
-          el.style.transition = ''; snapping = false; setTransform(0, 0, 1, 1);
+          if (!aiSession) {
+            const capabilities = await window.ai.languageModel.capabilities();
+            if (capabilities.available === 'no') {
+              throw new Error("AI capabilities are not available on this device. (capabilities.available returned 'no')");
+            }
+            // Add download progress monitoring just in case it's in state 'after-download'
+            aiSession = await window.ai.languageModel.create({
+              monitor(m) {
+                m.addEventListener("downloadprogress", (e) => {
+                  textSpan.textContent = `Downloading AI Model... ${Math.round((e.loaded / e.total) * 100)}%`;
+                });
+              }
+            });
+          }
+
+          const stream = await aiSession.promptStreaming(textToPrompt);
+          for await (const chunk of stream) {
+            finalResponse = chunk; // Chrome promptStreaming currently yields the full accumulating string
+            textSpan.textContent = finalResponse;
+            msgs.scrollTop = msgs.scrollHeight;
+          }
+
+        } else if (selectedModel.startsWith('ollama:')) {
+          var modelName = selectedModel.substring(7);
+          if (!window.ollamaClient) throw new Error("Ollama client not ready.");
+          const stream = await window.ollamaClient.generate({ model: modelName, prompt: textToPrompt, stream: true });
+          for await (const chunk of stream) {
+            finalResponse += chunk.response;
+            textSpan.textContent = finalResponse;
+            msgs.scrollTop = msgs.scrollHeight;
+          }
         }
-        active = false; canSnap = true;
-      };
+      } catch (err) {
+        finalResponse = "Error: " + err.message;
+        textSpan.textContent = finalResponse;
+      }
 
-      const animate = () => {
-        raf = null;
-        const e = latestPointer;
-        if (!e) return;
-        const r = el.getBoundingClientRect();
-        const edgeSlack = Math.max(22, Math.min(r.width, r.height) * 0.22);
-        const nearElement = e.clientX >= r.left - edgeSlack && e.clientX <= r.right + edgeSlack
-          && e.clientY >= r.top - edgeSlack && e.clientY <= r.bottom + edgeSlack;
-        const outsideX = e.clientX < r.left ? r.left - e.clientX : e.clientX > r.right ? e.clientX - r.right : 0;
-        const outsideY = e.clientY < r.top ? r.top - e.clientY : e.clientY > r.bottom ? e.clientY - r.bottom : 0;
-        const outsideDistance = Math.hypot(outsideX, outsideY);
-        const insideOriginalBounds = outsideDistance === 0;
-        if (!active && !nearElement) return;
-        if (active && !nearElement) { if (!snapping) resetTransform(true); return; }
-        active = true;
-        if (snapping) { if (!nearElement) return; stopSpring(); snapping = false; }
+      var endTime = performance.now();
+      
+      var actionsContainer = document.createElement('div');
+      actionsContainer.className = 'msg-actions regen-btn-container';
+      
+      var regenBtn = document.createElement('button');
+      regenBtn.className = 'icon-action-btn';
+      regenBtn.title = 'Regenerate';
+      regenBtn.innerHTML = SVG_REGEN;
+      regenBtn.onclick = () => { triggerAI(lastUserText, true); };
+      actionsContainer.appendChild(regenBtn);
 
-        const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-        const dx = e.clientX - cx, dy = e.clientY - cy;
-        const diagonal = Math.hypot(r.width, r.height);
-        const t = Math.min(1, Math.hypot(dx, dy) / Math.max(30, diagonal * 0.15));
-        const eased = t * (2 - t);
-        const outsideBlend = insideOriginalBounds
-          ? 1
-          : Math.pow(Math.max(0, 1 - outsideDistance / Math.max(1, edgeSlack)), 2) * 0.48;
-        const tension = eased * outsideBlend;
-        const tx = dx * 0.06 * tension, ty = dy * 0.06 * tension;
-        const axisTotal = Math.abs(dx) + Math.abs(dy) + 1;
-        const stretch = 0.06 * tension;
-        const sx = 1 + (Math.abs(dx) / axisTotal) * stretch;
-        const sy = 1 + (Math.abs(dy) / axisTotal) * stretch;
-        setTransform(tx, ty, sx, sy);
-        if (insideOriginalBounds) canSnap = true;
+      if (verboseCb.checked) {
+        var seconds = (endTime - startTime) / 1000;
+        var estimatedTokens = Math.ceil(finalResponse.length / 4);
+        var tps = seconds > 0 ? (estimatedTokens / seconds).toFixed(1) : 0;
+        var metaInfo = document.createElement('div');
+        metaInfo.className = 'chat-meta';
+        metaInfo.textContent = estimatedTokens + ' tokens | ' + seconds.toFixed(2) + 's | ' + tps + ' t/s';
+        actionsContainer.appendChild(metaInfo);
+      }
+      
+      aiWrapper.appendChild(actionsContainer);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
 
-        const breakSlack = Math.max(26, Math.min(r.width, r.height) * 0.2);
-        if (!insideOriginalBounds && canSnap && outsideDistance > breakSlack) {
-          canSnap = false;
-          const minOff = 2.8, minSD = 0.014;
-          const snapTx = Math.abs(tx) < minOff ? (dx === 0 ? 0 : Math.sign(dx) * minOff) : tx;
-          const snapTy = Math.abs(ty) < minOff ? (dy === 0 ? 0 : Math.sign(dy) * minOff) : ty;
-          const snapSx = Math.abs(sx - 1) < minSD ? (sx >= 1 ? 1 + minSD : 1 - minSD) : sx;
-          const snapSy = Math.abs(sy - 1) < minSD ? (sy >= 1 ? 1 + minSD : 1 - minSD) : sy;
-          playElasticReturn(snapTx, snapTy, snapSx, snapSy, 'snap');
+    function submitUserMessage(text) {
+      lastUserText = text;
+      
+      document.querySelectorAll('.edit-btn-container').forEach(b => b.remove());
+      
+      var userWrapper = document.createElement('div');
+      userWrapper.className = 'msg-wrapper user';
+      
+      var userDiv = document.createElement('div');
+      userDiv.className = 'chat-msg';
+      var textSpan = document.createElement('span');
+      textSpan.textContent = text;
+      
+      userDiv.appendChild(textSpan);
+      userWrapper.appendChild(userDiv);
+      
+      var actionsContainer = document.createElement('div');
+      actionsContainer.className = 'msg-actions edit-btn-container';
+      
+      var editBtn = document.createElement('button');
+      editBtn.className = 'icon-action-btn';
+      editBtn.title = 'Edit';
+      editBtn.innerHTML = SVG_EDIT;
+      editBtn.onclick = () => {
+        var newText = prompt("Edit your message:", lastUserText);
+        if (newText !== null && newText.trim() !== '') {
+          lastUserText = newText.trim();
+          textSpan.textContent = lastUserText;
+          triggerAI(lastUserText, true); 
         }
       };
+      
+      actionsContainer.appendChild(editBtn);
+      userWrapper.appendChild(actionsContainer);
+      
+      msgs.appendChild(userWrapper);
+      lastUserWrapper = userWrapper;
+      msgs.scrollTop = msgs.scrollHeight;
+      
+      triggerAI(lastUserText, false);
+    }
 
-      window.addEventListener('pointermove', e => { latestPointer = e; if (raf) return; raf = requestAnimationFrame(animate); }, { passive: true });
-      window.addEventListener('pointerleave', () => resetTransform(true), { passive: true });
-      window.addEventListener('blur', () => resetTransform(false));
+    input.addEventListener('keypress', async function(e) {
+      if (e.key === 'Enter' && input.value.trim()) {
+        var text = input.value.trim();
+        input.value = '';
+        submitUserMessage(text);
+      }
     });
   }
+}
 
-  document.querySelectorAll('.btn').forEach(el => {
-    el.addEventListener('click', async e => {
-      e.preventDefault();
-      if (el.classList.contains('pressed')) return;
-      el.classList.add('pressed');
-      await delay(220);
-      window.location.href = el.href;
-      await delay(80);
-      el.classList.remove('pressed');
-    }, { passive: false });
+function bootstrapLiquidGL() {
+  if (typeof window.liquidGL !== 'function') return;
 
-    el.addEventListener('pointerdown', () => el.classList.add('pressed'), { passive: true });
-    el.addEventListener('pointerup',   () => el.classList.remove('pressed'), { passive: true });
-    el.addEventListener('pointerleave',() => el.classList.remove('pressed'), { passive: true });
+  window.liquidGL({
+    snapshot: 'html',
+    target: '.liquid-glass',
+    resolution: 2,
+    refraction: 0.02,
+    bevelDepth: 0.08,
+    bevelWidth: 0.14,
+    frost: 0.8,
+    shadow: true,
+    specular: true,
+    reveal: 'none',
+    tilt: false,
+    magnify: 1
   });
 
-  // Only load liquidGL if the gate didn't block us (stack still exists)
-  if (document.querySelector('.stack')) {
-    window.addEventListener('load', loadSite);
-  }
+  document.querySelectorAll('.liquid-glass').forEach(function(el) {
+    el.style.opacity = '1';
+  });
+  document.querySelectorAll('.btn.liquid-glass').forEach(function(el) {
+    el.style.pointerEvents = 'auto';
+  });
+  
+  var tensionElements = Array.from(document.querySelectorAll('.liquid-glass.surface-tension'));
+  tensionElements.forEach(function(el) { el.style.pointerEvents = 'auto'; });
+
+  tensionElements.forEach(function(el) {
+    let snapping = false;
+    let canSnap = false;
+    let raf = null;
+    let active = false;
+    let latestPointer = null;
+    let springRaf = null;
+    let currentTx = 0, currentTy = 0, currentSx = 1, currentSy = 1;
+
+    const setTransform = (tx, ty, sx, sy) => {
+      currentTx = tx; currentTy = ty; currentSx = sx; currentSy = sy;
+      el.style.transform = `translate3d(${tx}px, ${ty}px, 0) scaleX(${sx}) scaleY(${sy})`;
+    };
+
+    const stopSpring = () => {
+      if (!springRaf) return;
+      cancelAnimationFrame(springRaf);
+      springRaf = null;
+    };
+
+    const playElasticReturn = (tx, ty, sx, sy, profile = 'snap') => {
+      stopSpring();
+      snapping = true;
+      el.style.transition = '';
+      const minKick = profile === 'snap' ? 5.4 : 4.2;
+      if (Math.abs(tx) < minKick && Math.abs(ty) < minKick) {
+        if (Math.abs(tx) >= Math.abs(ty)) tx = (tx === 0 ? 1 : Math.sign(tx)) * minKick;
+        else ty = (ty === 0 ? 1 : Math.sign(ty)) * minKick;
+      }
+      const minScaleKick = profile === 'snap' ? 0.022 : 0.016;
+      if (Math.abs(sx - 1) < minScaleKick) sx = sx >= 1 ? 1 + minScaleKick : 1 - minScaleKick;
+      if (Math.abs(sy - 1) < minScaleKick) sy = sy >= 1 ? 1 + minScaleKick : 1 - minScaleKick;
+
+      let x = tx, y = ty, xScale = sx, yScale = sy;
+      let vx = -tx * (profile === 'snap' ? 16.2 : 11.4);
+      let vy = -ty * (profile === 'snap' ? 16.2 : 11.4);
+      let vsx = (1 - sx) * (profile === 'snap' ? 12.6 : 8.6);
+      let vsy = (1 - sy) * (profile === 'snap' ? 12.6 : 8.6);
+
+      const stiffness = profile === 'snap' ? 142 : 122;
+      const damping = profile === 'snap' ? 5.2 : 6.4;
+      const settlePos = 0.06, settleScale = 0.0012, settleVel = 0.03;
+      const maxDurationMs = profile === 'snap' ? 1250 : 1050;
+
+      const start = performance.now();
+      let last = performance.now();
+      const step = now => {
+        const dt = Math.min(0.033, (now - last) / 1000);
+        last = now;
+        vx += (-stiffness * x - damping * vx) * dt;
+        vy += (-stiffness * y - damping * vy) * dt;
+        vsx += (-stiffness * (xScale - 1) - damping * vsx) * dt;
+        vsy += (-stiffness * (yScale - 1) - damping * vsy) * dt;
+        x += vx * dt; y += vy * dt; xScale += vsx * dt; yScale += vsy * dt;
+        
+        setTransform(x, y, xScale, yScale);
+
+        const settled = Math.abs(x) < settlePos && Math.abs(y) < settlePos
+          && Math.abs(xScale - 1) < settleScale && Math.abs(yScale - 1) < settleScale
+          && Math.abs(vx) < settleVel && Math.abs(vy) < settleVel
+          && Math.abs(vsx) < settleVel && Math.abs(vsy) < settleVel;
+
+        if (settled || (now - start) >= maxDurationMs) {
+          springRaf = null; snapping = false; setTransform(0, 0, 1, 1); return;
+        }
+        springRaf = requestAnimationFrame(step);
+      };
+      springRaf = requestAnimationFrame(step);
+    };
+
+    const resetTransform = (smooth = true) => {
+      if (raf) { cancelAnimationFrame(raf); raf = null; }
+      if (snapping) { active = false; canSnap = true; return; }
+      stopSpring();
+      if (smooth) {
+        const hasTension = Math.abs(currentTx) > 0.1 || Math.abs(currentTy) > 0.1
+          || Math.abs(currentSx - 1) > 0.001 || Math.abs(currentSy - 1) > 0.001;
+        if (hasTension) playElasticReturn(currentTx, currentTy, currentSx, currentSy, 'release');
+        else { snapping = false; setTransform(0, 0, 1, 1); }
+      } else {
+        el.style.transition = ''; snapping = false; setTransform(0, 0, 1, 1);
+      }
+      active = false; canSnap = true;
+    };
+
+    const animate = () => {
+      raf = null;
+      const e = latestPointer;
+      if (!e) return;
+      const r = el.getBoundingClientRect();
+      const edgeSlack = Math.max(22, Math.min(r.width, r.height) * 0.22);
+      const nearElement = e.clientX >= r.left - edgeSlack && e.clientX <= r.right + edgeSlack
+        && e.clientY >= r.top - edgeSlack && e.clientY <= r.bottom + edgeSlack;
+      const outsideX = e.clientX < r.left ? r.left - e.clientX : e.clientX > r.right ? e.clientX - r.right : 0;
+      const outsideY = e.clientY < r.top ? r.top - e.clientY : e.clientY > r.bottom ? e.clientY - r.bottom : 0;
+      const outsideDistance = Math.hypot(outsideX, outsideY);
+      const insideOriginalBounds = outsideDistance === 0;
+
+      if (!active && !nearElement) return;
+      if (active && !nearElement) { if (!snapping) resetTransform(true); return; }
+      active = true;
+      if (snapping) { if (!nearElement) return; stopSpring(); snapping = false; }
+
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      const dx = e.clientX - cx, dy = e.clientY - cy;
+      const diagonal = Math.hypot(r.width, r.height);
+      const t = Math.min(1, Math.hypot(dx, dy) / Math.max(30, diagonal * 0.15));
+      const eased = t * (2 - t);
+      const outsideBlend = insideOriginalBounds
+        ? 1
+        : Math.pow(Math.max(0, 1 - outsideDistance / Math.max(1, edgeSlack)), 2) * 0.48;
+      
+      const tension = eased * outsideBlend;
+      const tx = dx * 0.06 * tension, ty = dy * 0.06 * tension;
+      const axisTotal = Math.abs(dx) + Math.abs(dy) + 1;
+      const stretch = 0.06 * tension;
+      const sx = 1 + (Math.abs(dx) / axisTotal) * stretch;
+      const sy = 1 + (Math.abs(dy) / axisTotal) * stretch;
+
+      setTransform(tx, ty, sx, sy);
+      if (insideOriginalBounds) canSnap = true;
+
+      const breakSlack = Math.max(26, Math.min(r.width, r.height) * 0.2);
+      if (!insideOriginalBounds && canSnap && outsideDistance > breakSlack) {
+        canSnap = false;
+        const minOff = 2.8, minSD = 0.014;
+        const snapTx = Math.abs(tx) < minOff ? (dx === 0 ? 0 : Math.sign(dx) * minOff) : tx;
+        const snapTy = Math.abs(ty) < minOff ? (dy === 0 ? 0 : Math.sign(dy) * minOff) : ty;
+        const snapSx = Math.abs(sx - 1) < minSD ? (sx >= 1 ? 1 + minSD : 1 - minSD) : sx;
+        const snapSy = Math.abs(sy - 1) < minSD ? (sy >= 1 ? 1 + minSD : 1 - minSD) : sy;
+        playElasticReturn(snapTx, snapTy, snapSx, snapSy, 'snap');
+      }
+    };
+
+    window.addEventListener('pointermove', e => { latestPointer = e; if (raf) return; raf = requestAnimationFrame(animate); }, { passive: true });
+    window.addEventListener('pointerleave', () => resetTransform(true), { passive: true });
+    window.addEventListener('blur', () => resetTransform(false));
+  });
+}
+
+document.querySelectorAll('.btn').forEach(el => {
+  el.addEventListener('click', async e => {
+    e.preventDefault();
+    if (el.classList.contains('pressed')) return;
+    el.classList.add('pressed');
+    await delay(220);
+    window.location.href = el.href;
+    await delay(80);
+    el.classList.remove('pressed');
+  }, { passive: false });
+  el.addEventListener('pointerdown', () => el.classList.add('pressed'), { passive: true });
+  el.addEventListener('pointerup',   () => el.classList.remove('pressed'), { passive: true });
+  el.addEventListener('pointerleave',() => el.classList.remove('pressed'), { passive: true });
+});
+
+if (document.querySelector('.stack')) {
+  window.addEventListener('load', loadSite);
+}
 </script>
 </body>
 </html>
