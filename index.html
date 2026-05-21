@@ -1,8 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-US" xml:lang="en-US" translate="no" class="notranslate">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+<meta http-equiv="content-language" content="en-US" />
+<meta name="google" content="notranslate" />
 <title>Cryptids Emporium</title>
 <link rel="icon" href="./main-assets/favicon.png" type="image/png" sizes="32x32" />
 <style>
@@ -343,7 +345,7 @@ body {
 .chat-model-dropdown option { background: #1a1a1a; }
 </style>
 </head>
-<body>
+<body translate="no" class="notranslate">
 <div class="stack">
   <div class="pfp" data-liquid-ignore style='background-image:url("./main-assets/pfp.png")'></div>
   <div class="frame about-me liquid-glass surface-tension"><div class="glass-content" data-liquid-ignore style='background-image:url("./main-assets/about-me.svg")'></div></div>
@@ -486,6 +488,13 @@ function loadSite() {
             select.appendChild(opt);
           });
         }
+        if (isSafari) {
+          var builtinOption = select.querySelector('option[value="builtin"]');
+          if (builtinOption) builtinOption.remove();
+          if (select.options.length > 0) {
+            select.value = select.options[0].value;
+          }
+        }
       } catch(e) {}
     })();
 
@@ -533,30 +542,33 @@ function loadSite() {
       try {
         if (selectedModel === 'builtin') {
           if (builtinApiName === 'None') throw new Error("No built-in AI model is available on this browser.");
+          if (isSafari) throw new Error("Prompt API is not available in WebKit browsers. Use Chrome or Edge with the Prompt API enabled.");
 
           // Exact implementation from official Chrome Labs web-ai-demos
-          if (!('ai' in window) || !('languageModel' in window.ai)) {
-             throw new Error("window.ai.languageModel is missing. Check chrome://flags#prompt-api-for-gemini-nano.");
+          if (!('LanguageModel' in window)) {
+             throw new Error("LanguageModel is missing. Check chrome://flags#prompt-api-for-gemini-nano.");
           }
 
           if (!aiSession) {
-            const capabilities = await window.ai.languageModel.capabilities();
-            if (capabilities.available === 'no') {
-              throw new Error("AI capabilities are not available on this device. (capabilities.available returned 'no')");
+            const result = await (async () => {
+              const availability = await LanguageModel.availability({ languages: ["en"] });
+              console.log(availability);
+              return availability;
+            })();
+            if (result === 'unavailable') {
+              throw new Error("AI capabilities are not available on this device. (LanguageModel.availability returned 'unavailable')");
             }
-            // Add download progress monitoring just in case it's in state 'after-download'
-            aiSession = await window.ai.languageModel.create({
-              monitor(m) {
-                m.addEventListener("downloadprogress", (e) => {
-                  textSpan.textContent = `Downloading AI Model... ${Math.round((e.loaded / e.total) * 100)}%`;
-                });
-              }
-            });
+            aiSession = await LanguageModel.create();
           }
 
           const stream = await aiSession.promptStreaming(textToPrompt);
           for await (const chunk of stream) {
-            finalResponse = chunk; // Chrome promptStreaming currently yields the full accumulating string
+            const chunkText = typeof chunk === 'string' ? chunk : (chunk && typeof chunk.text === 'string' ? chunk.text : '');
+            if (chunkText.startsWith(finalResponse) && chunkText.length >= finalResponse.length) {
+              finalResponse = chunkText;
+            } else {
+              finalResponse += chunkText;
+            }
             textSpan.textContent = finalResponse;
             msgs.scrollTop = msgs.scrollHeight;
           }
