@@ -516,6 +516,23 @@ function loadSite() {
 
     (async function fetchOllamaModels() {
       while (!window.ollamaClient) { await new Promise(r => setTimeout(r, 50)); }
+
+      var isLocalOllamaHost =
+        location.hostname === 'localhost' ||
+        location.hostname === '127.0.0.1' ||
+        location.hostname === '::1';
+
+      if (!isLocalOllamaHost) {
+        if (isSafari) {
+          var builtinOption = select.querySelector('option[value="builtin"]');
+          if (builtinOption) builtinOption.remove();
+          if (select.options.length > 0) {
+            select.value = select.options[0].value;
+          }
+        }
+        return;
+      }
+
       try {
         let res = await window.ollamaClient.list();
         if (res && res.models) {
