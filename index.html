@@ -495,6 +495,31 @@ function loadSite() {
     const SVG_REGEN = '<svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>';
     const SVG_ATTACH = '<svg viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5a2.5 2.5 0 0 1 5 0v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5a2.5 2.5 0 0 0 5 0V5c0-3.31-2.69-6-6-6S3 2.69 3 6v11.5c0 4.14 3.36 7.5 7.5 7.5s7.5-3.36 7.5-7.5V6h-1.5z"/></svg>';
 
+    function renderMarkdown(text) {
+      if (!text || typeof text !== 'string') return '';
+      
+      // Escape HTML
+      text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      
+      // Handle inline code (backticks)
+      text = text.replace(/`([^`]+)`/g, '<code style="background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:0.9em;">$1</code>');
+      
+      // Handle code blocks (triple backticks)
+      text = text.replace(/```(\w*)\n([\s\S]*?)```/g, function(match, lang, code) {
+        var langClass = lang ? ' lang-' + lang : '';
+        var displayLang = lang || 'code';
+        return '<pre style="background:rgba(0,0,0,0.3);padding:12px;border-radius:8px;overflow-x:auto;margin:8px 0;font-family:monospace;font-size:0.85em;border-left:3px solid rgba(255,255,255,0.2);"><div style="color:rgba(255,255,255,0.6);font-size:0.75em;margin-bottom:8px;">'+displayLang+'</div><code>'+code.trim()+'</code></pre>';
+      });
+      
+      // Handle bold
+      text = text.replace(/\*\*([^*]+)\*\*/g, '<strong style="font-weight:600;">$1</strong>');
+      
+      // Handle line breaks
+      text = text.replace(/\n/g, '<br>');
+      
+      return text;
+    }
+
     var chatUI = document.createElement('div');
     chatUI.id = 'ai-chat';
     chatUI.className = 'liquid-glass';
@@ -530,12 +555,12 @@ function loadSite() {
     var verboseCb = document.getElementById('verbose-checkbox');
     var attachBtn = document.getElementById('ai-file-attach-btn');
     var fileInput = document.getElementById('ai-file-input');
+    var chatInput = document.getElementById('ai-chat-input');
     var attachmentPreview = document.getElementById('ai-chat-attachment-preview');
     var currentAttachments = [];
 
-    attachBtn.onclick = () => fileInput.click();
-    fileInput.onchange = e => {
-      for (var file of e.target.files) {
+    function processFiles(fileList) {
+      for (var file of fileList) {
         var type = file.type.startsWith('image/') ? 'image' : file.type.startsWith('audio/') ? 'audio' : null;
         if (!type) continue;
         var reader = new FileReader();
@@ -547,8 +572,65 @@ function loadSite() {
         })(file, type);
         reader.readAsDataURL(file);
       }
+    }
+
+    attachBtn.onclick = () => fileInput.click();
+    fileInput.onchange = e => {
+      processFiles(e.target.files);
       fileInput.value = '';
     };
+
+    chatInput.addEventListener('paste', e => {
+      if (e.clipboardData && e.clipboardData.items) {
+        var files = [];
+        for (var item of e.clipboardData.items) {
+          if (item.kind === 'file') {
+            var file = item.getAsFile();
+            if (file && (file.type.startsWith('image/') || file.type.startsWith('audio/'))) {
+              files.push(file);
+            }
+          }
+        }
+        if (files.length > 0) {
+          e.preventDefault();
+          processFiles(files);
+        }
+      }
+    });
+
+    var chatContent = document.getElementById('ai-chat-content');
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      chatContent.addEventListener(eventName, e => {
+        e.preventDefault();
+        e.stopPropagation();
+      }, false);
+    });
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+      chatContent.addEventListener(eventName, e => {
+        chatContent.style.opacity = '0.7';
+      }, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+      chatContent.addEventListener(eventName, e => {
+        chatContent.style.opacity = '1';
+      }, false);
+    });
+    
+    chatContent.addEventListener('drop', e => {
+      if (e.dataTransfer && e.dataTransfer.files) {
+        var files = [];
+        for (var file of e.dataTransfer.files) {
+          if (file.type.startsWith('image/') || file.type.startsWith('audio/')) {
+            files.push(file);
+          }
+        }
+        if (files.length > 0) {
+          processFiles(files);
+        }
+      }
+    }, false);
 
     function renderAttachments() {
        if (currentAttachments.length === 0) {
@@ -684,7 +766,15 @@ function loadSite() {
 
           if (!aiSession) {
             const result = await (async () => {
-              const availability = await LanguageModel.availability({ languages: ["en"] });
+              const availability = await LanguageModel.availability({ 
+                languages: ["en"],
+                expectedInputs: [
+                  { type: "text", languages: ["en"] },
+                  { type: "image" },
+                  { type: "audio" },
+                ],
+                expectedOutputs: [{ type: "text", languages: ["en"] }],
+              });
               console.log('LanguageModel availability:', availability);
               return availability;
             })();
@@ -695,23 +785,39 @@ function loadSite() {
               showTextSpan();
               textSpan.textContent = "Downloading Gemini Nano model... please wait.";
             }
-            aiSession = await LanguageModel.create();
+            aiSession = await LanguageModel.create({
+              expectedInputs: [
+                { type: "text", languages: ["en"] },
+                { type: "image" },
+                { type: "audio" },
+              ],
+              expectedOutputs: [{ type: "text", languages: ["en"] }],
+            });
             // Clear the downloading text if it was shown
             if (textSpan) {
               textSpan.textContent = "";
             }
           }
 
-          var promptInput = textToPrompt;
-          var audioFiles = attachments.filter(a => a.type === 'audio').map(a => a.file);
-          if (audioFiles.length > 0) {
-             promptInput = [textToPrompt, ...audioFiles];
+          var promptParts = [{ type: "text", value: textToPrompt }];
+          var imageAttachments = attachments.filter(a => a.type === 'image');
+          var audioAttachments = attachments.filter(a => a.type === 'audio');
+          
+          for (var att of imageAttachments) {
+            promptParts.push({ type: "image", value: att.file });
           }
+          
+          for (var att of audioAttachments) {
+            promptParts.push({ type: "audio", value: att.file });
+          }
+          
+          var promptInput = [{ role: "user", content: promptParts }];
 
           var stream;
           try {
             stream = await aiSession.promptStreaming(promptInput);
           } catch (e) {
+            console.error('Prompt API error:', e);
             // If the session was destroyed internally (e.g., from a crash or previous error), recreate it
             if (e.message.includes("destroyed")) {
               aiSession = await LanguageModel.create();
@@ -722,14 +828,29 @@ function loadSite() {
           }
 
           for await (const chunk of stream) {
-            const chunkText = typeof chunk === 'string' ? chunk : (chunk && typeof chunk.text === 'string' ? chunk.text : '');
-            if (chunkText.startsWith(finalResponse) && chunkText.length >= finalResponse.length) {
-              finalResponse = chunkText;
-            } else {
-              finalResponse += chunkText;
+            var chunkText = '';
+            if (typeof chunk === 'string') {
+              chunkText = chunk;
+            } else if (chunk && typeof chunk === 'object') {
+              if (chunk.text) {
+                chunkText = chunk.text;
+              } else if (chunk.content) {
+                chunkText = chunk.content;
+              } else {
+                chunkText = '';
+              }
             }
+            
+            if (chunkText) {
+              if (chunkText.startsWith(finalResponse) && chunkText.length >= finalResponse.length) {
+                finalResponse = chunkText;
+              } else {
+                finalResponse += chunkText;
+              }
+            }
+            
             showTextSpan();
-            textSpan.textContent = finalResponse;
+            textSpan.innerHTML = renderMarkdown(finalResponse);
             msgs.scrollTop = msgs.scrollHeight;
           }
 
@@ -755,7 +876,7 @@ function loadSite() {
           for await (const chunk of stream) {
             finalResponse += chunk.response;
             showTextSpan();
-            textSpan.textContent = finalResponse;
+            textSpan.innerHTML = renderMarkdown(finalResponse);
             msgs.scrollTop = msgs.scrollHeight;
           }
         }
