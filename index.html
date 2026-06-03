@@ -425,6 +425,7 @@ document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
   // Feature detection
   var hasUAD     = !!navigator.userAgentData; 
   var hasLanguageModel = 'LanguageModel' in window;
+  var hasAllowedAngleBackend = /Direct3D|D3D|Metal/i.test(rend);
   var hasApple   = 'ApplePaySession' in window || (rend && rend.includes('Apple')) || navigator.vendor === 'Apple Computer, Inc.';
   var hasGesture = 'GestureEvent' in window;
   var isMobi     = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
@@ -433,8 +434,8 @@ document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
   var isIOS = hasApple && isMobi;
 
   // ── Allow Rules ────────────────────────────────────────────────────────
-  // Chromium desktop must expose LanguageModel to use built-in AI.
-  if (hasUAD && !isMobi && hasLanguageModel) return;  // Allow Chromium Desktop browsers
+  // Chromium desktop must expose LanguageModel and use Direct3D/Metal.
+  if (hasUAD && !isMobi && hasLanguageModel && hasAllowedAngleBackend) return;  // Allow Chromium Desktop browsers
   if (isSafariDesktop) return;    // Allow Safari Desktop
   if (isIOS) return;              // Allow iOS
 
@@ -442,12 +443,12 @@ document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
   var gateId, gateHTML;
   var btnStyle = 'display:inline-block;padding:10px 22px;background:#fff;color:#000;border-radius:8px;text-decoration:none;font-size:.875rem;font-weight:600;margin:4px';
 
-  if (hasUAD && !isMobi && !hasLanguageModel) {
+  if (hasUAD && !isMobi && (!hasLanguageModel || !hasAllowedAngleBackend)) {
     gateId = 'chrome-requirements-gate';
     gateHTML = '<div style="max-width:520px;text-align:center;line-height:1.6">'
       + '<div style="font-size:2.4rem;margin-bottom:8px">⚠</div>'
       + '<h2 style="margin:0 0 12px;font-size:1.25rem;font-weight:700">Chrome Requirements Not Met</h2>'
-      + '<p style="margin:0 0 10px;font-size:.9rem;color:rgba(255,255,255,.75)">Chrome or Edge must have LanguageModel availability enabled.</p>'
+      + '<p style="margin:0 0 10px;font-size:.9rem;color:rgba(255,255,255,.75)">Chrome or Edge must have LanguageModel availability enabled and run on Direct3D or Metal.</p>'
       + '<p style="margin:0 0 20px;font-size:.85rem;color:rgba(255,255,255,.6)">Enable chrome://flags#prompt-api-for-gemini-nano and restart the browser.</p>'
       + '<a href="https://www.google.com/chrome/" style="' + btnStyle + '">Download Chrome</a>'
       + '</div>';
