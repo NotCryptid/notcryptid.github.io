@@ -794,7 +794,7 @@
           <button class="btn" id="advanced-open-makecode-btn" style="margin-top:8px;">Open MicroOS Source in MakeCode</button>
           <div style="font-size:12px;color:#999;margin-top:10px;max-width:640px;">
             If that doesn't load the project directly, go to
-            <a href="https://makecode.microbit.org/" target="_blank" rel="noopener">makecode.microbit.org</a>,
+            <a href="https://arcade.makecode.com/" target="_blank" rel="noopener">arcade.makecode.com</a>,
             choose Import &rarr; Import URL, and paste:
             <code id="advanced-github-url">https://github.com/NotCryptid/MicroOS</code>
             <button class="btn small secondary" id="advanced-copy-url-btn" style="margin-left:6px;">Copy</button>
@@ -2327,7 +2327,7 @@
   document.getElementById('advanced-github-url').textContent = MICROOS_REPO_URL;
 
   document.getElementById('advanced-open-makecode-btn').addEventListener('click', () => {
-    window.open('https://makecode.microbit.org/#pub:gh/NotCryptid/MicroOS', '_blank', 'noopener');
+    window.open('https://arcade.makecode.com/#pub:gh/NotCryptid/MicroOS', '_blank', 'noopener');
   });
 
   document.getElementById('advanced-copy-url-btn').addEventListener('click', async () => {
