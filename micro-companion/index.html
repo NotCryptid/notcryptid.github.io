@@ -1131,16 +1131,25 @@
       document.getElementById('waiting-detail').textContent =
         'Opening the serial port and pinging the device. Make sure MicroOS is running and the cable supports data.';
       await client.connect();
+      let pingSupported = true;
       try{
         await client.ping();
       } catch (pingErr){
-        /* the DTR-assert -> device-ready gap can be tight right after opening; give it one more shot */
+        /* the DTR-assert -> device-ready gap can be tight right after opening; give it one more shot
+           before concluding the device just doesn't speak this protocol at all. */
         document.getElementById('waiting-detail').textContent = 'First ping timed out, retrying…';
         await sleep(500);
-        await client.ping();
+        try{
+          await client.ping();
+        } catch (pingErr2){
+          /* MicroOS versions before v1.1.0 have no serial/USB protocol support whatsoever, so a
+             ping to them will always time out -- that's expected, not a connection failure. Enter
+             lite mode instead of bouncing back to the connect screen with a scary error. */
+          pingSupported = false;
+        }
       }
       client.onDisconnect = handleDeviceDisconnect;
-      await enterApp();
+      await enterApp(pingSupported);
     } catch (e){
       try { await client.disconnect(); } catch (e2) { /* ignore */ }
       showView('connect');
@@ -1177,18 +1186,25 @@
 
   /* ---------- entering the main app ---------- */
 
-  async function enterApp(){
+  async function enterApp(pingSupported){
     showView('app');
-    try{
-      await loadDeviceInfo();
-      isLiteDevice = false;
-    } catch (e){
-      /* Old MicroOS builds don't understand device.info (or anything else in this
-         app's JSON protocol) at all -- rather than dead-ending on a connect error,
-         fall back to a lite UI that only offers firmware flashing. */
-      logDebug('device.info failed (' + e.message + ') -- falling back to lite mode (flashing only).');
+    if (!pingSupported){
+      /* Already know the device never answered a ping -- device.info would just time
+         out too, so don't bother asking. */
       isLiteDevice = true;
       deviceInfoCache = null;
+    } else {
+      try{
+        await loadDeviceInfo();
+        isLiteDevice = false;
+      } catch (e){
+        /* Pinged fine but device.info still failed -- an unexpected in-between case
+           (e.g. a partial/experimental protocol version). Fall back to lite mode
+           rather than dead-ending on a connect error. */
+        logDebug('device.info failed (' + e.message + ') -- falling back to lite mode (flashing only).');
+        isLiteDevice = true;
+        deviceInfoCache = null;
+      }
     }
     applyLiteMode();
 
