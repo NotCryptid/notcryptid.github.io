@@ -1,0 +1,2355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="./favicon.png" type="image/png" sizes="32x32" />
+<title>Micro Companion</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --purple: #590094;
+    --purple-light: #E690FF;
+    --white: #FFFFFF;
+    --black: #000000;
+    --border: #e2e2e2;
+    --font: 'Inter', 'Segoe UI', Arial, sans-serif;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background-color: #000;
+    font-family: var(--font);
+  }
+
+  body{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+
+  #app{
+    width: 100%;
+    height: 100%;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .hidden{ display: none !important; }
+
+  /* ---------- shared themed full-screen views ---------- */
+  .fullscreen-view{
+    width: 80%;
+    max-width: 900px;
+    min-height: 520px;
+    background: var(--white);
+    box-shadow: 0 0 30px rgba(0,0,0,0.4);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 60px 40px;
+  }
+
+  .fullscreen-view h1{
+    font-family: var(--font);
+    font-weight: 600;
+    font-size: 32px;
+    color: var(--black);
+    margin: 0 0 16px 0;
+  }
+
+  .fullscreen-view p{
+    font-family: var(--font);
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #333;
+    max-width: 560px;
+    margin: 0 0 8px 0;
+  }
+
+  .fullscreen-view .icon-row{
+    margin-bottom: 24px;
+  }
+
+  .browser-pill{
+    display: inline-block;
+    padding: 6px 14px;
+    margin: 2px;
+    background: #f2f2f2;
+    color: #555;
+    font-size: 13px;
+  }
+
+  .browser-pill.ok{
+    background: var(--purple);
+    color: #fff;
+  }
+
+  /* spinner for waiting view */
+  .spinner{
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 6px solid #eee;
+    border-top-color: var(--purple);
+    animation: spin 0.9s linear infinite;
+    margin-bottom: 24px;
+  }
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+
+  .btn{
+    font-family: var(--font);
+    font-weight: 400;
+    font-size: 16px;
+    background: var(--purple);
+    color: var(--white);
+    border: none;
+    padding: 14px 32px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: opacity .15s ease;
+  }
+  .btn:hover{ opacity: .88; }
+  .btn:disabled{
+    background: #cfcfcf;
+    color: #777;
+    cursor: not-allowed;
+  }
+  .btn.secondary{
+    background: var(--white);
+    color: var(--purple);
+    border: 2px solid var(--purple);
+  }
+  .btn.small{
+    padding: 8px 18px;
+    font-size: 14px;
+  }
+
+  .error-box{
+    margin-top: 20px;
+    padding: 12px 18px;
+    background: #ffecec;
+    border: 1px solid #ffb3b3;
+    color: #a10000;
+    font-size: 14px;
+    max-width: 560px;
+  }
+
+  /* ---------- main app layout ---------- */
+  #view-app{
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--white);
+  }
+
+  .topbar{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--black);
+    color: var(--white);
+    padding: 14px 28px;
+    font-size: 14px;
+  }
+
+  .topbar .brand{
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: .5px;
+  }
+
+  .topbar .status{
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .status-dot{
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #2ecc71;
+    display: inline-block;
+    margin-right: 8px;
+    box-shadow: 0 0 6px #2ecc71;
+  }
+
+  .main-content{
+    flex: 1;
+    display: flex;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    min-height: 0;
+    box-shadow: 0 0 10px rgba(0,0,0,0.08);
+  }
+
+  .sidebar{
+    background: var(--white);
+    width: 260px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border);
+  }
+
+  .sidebar ul{
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .sidebar li a{
+    display: block;
+    text-decoration: none;
+    color: var(--black);
+    background: var(--white);
+    font-family: var(--font);
+    font-weight: 400;
+    font-size: 20px;
+    padding: 20px 24px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    user-select: none;
+  }
+
+  .sidebar li a:hover{
+    background: var(--purple);
+    color: var(--white);
+  }
+
+  .sidebar li.active a{
+    background: var(--purple);
+    color: var(--white);
+  }
+
+  .content{
+    flex: 1;
+    padding: 32px 40px;
+    overflow-y: auto;
+    min-width: 0;
+  }
+
+  .content::-webkit-scrollbar{ width: 12px; }
+  .content::-webkit-scrollbar-thumb{ background: var(--purple-light); }
+  .content::-webkit-scrollbar-track{ background: transparent; }
+
+  .page-title{
+    font-family: var(--font);
+    font-weight: 600;
+    font-size: 28px;
+    margin: 0 0 24px 0;
+    color: var(--black);
+  }
+
+  .page{
+    display: none;
+  }
+  .page.active{
+    display: block;
+  }
+
+  /* ---------- Device page ---------- */
+  .device-layout{
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .device-info-list{
+    flex: 1;
+    min-width: 300px;
+  }
+
+  .info-row{
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 18px;
+  }
+  .info-row .label{
+    color: #666;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 4px;
+  }
+  .info-row .value{
+    color: var(--black);
+    font-weight: 500;
+  }
+
+  .storage-bar-track{
+    width: 100%;
+    height: 14px;
+    background: #eee;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .storage-bar-fill{
+    height: 100%;
+    background: var(--purple);
+    transition: width .3s ease;
+  }
+
+  .microbit-image{
+    width: 280px;
+    max-width: 100%;
+    height: auto;
+    flex-shrink: 0;
+  }
+
+  /* ---------- list rows (files / apps) ---------- */
+  .list-panel{
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+  }
+
+  .file-list{
+    flex: 1;
+    min-width: 260px;
+    max-height: 560px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+  }
+  .file-list::-webkit-scrollbar{ width: 12px; }
+  .file-list::-webkit-scrollbar-thumb{ background: var(--purple-light); }
+
+  .file-row{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    cursor: pointer;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    font-size: 18px;
+    color: var(--black);
+    user-select: none;
+  }
+  .file-row:hover{ background: var(--purple); color: var(--white); }
+  .file-row.active{ background: var(--purple); color: var(--white); }
+  .file-row img.row-icon{
+    width: 28px; height: 28px; object-fit: contain;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+  }
+  .file-row .row-icon-generic{
+    width: 28px; height: 28px; flex-shrink: 0;
+    background: #999;
+    display: inline-flex; align-items:center; justify-content:center;
+    color:#fff; font-size: 11px; font-weight:600;
+  }
+  .file-row .row-meta{ margin-left: auto; font-size: 13px; opacity: .75; }
+  .empty-msg{ padding: 24px 20px; color: #888; font-size: 15px; }
+
+  .preview-panel{
+    flex: 1.4;
+    min-width: 320px;
+    border: 1px solid var(--border);
+    padding: 24px;
+    min-height: 300px;
+  }
+  .preview-header{
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .preview-header img, .preview-header .row-icon-generic{
+    width: 48px; height: 48px; object-fit: contain;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+  }
+  .preview-header .row-icon-generic{
+    background:#999; color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700;
+  }
+  .preview-name{ font-size: 22px; font-weight: 600; }
+  .preview-size{ font-size: 13px; color: #777; }
+
+  .preview-body pre{
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: #f7f7f7;
+    padding: 16px;
+    max-height: 380px;
+    overflow: auto;
+    font-family: 'Consolas', 'Menlo', monospace;
+    font-size: 14px;
+  }
+
+  .xcl-table-wrap{ overflow: auto; max-height: 380px; border: 1px solid var(--border); }
+  table.xcl-table{ border-collapse: collapse; font-size: 13px; }
+  table.xcl-table th, table.xcl-table td{
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    white-space: nowrap;
+  }
+  table.xcl-table th{ background: var(--purple); color: #fff; position: sticky; top: 0; }
+  table.xcl-table td.rownum{ background: #f2f2f2; font-weight: 600; text-align: center; }
+
+  .preview-placeholder{ color: #999; font-size: 15px; padding: 40px 0; text-align: center; }
+
+  .upload-bar{
+    margin-top: 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  /* ---------- Settings page ---------- */
+  .settings-list{ max-width: 760px; }
+  .settings-row{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 18px 4px;
+    border-bottom: 1px solid var(--border);
+  }
+  .settings-row label{
+    font-size: 18px;
+    color: var(--black);
+  }
+  .settings-row input[type="text"],
+  .settings-row input[type="number"],
+  .settings-row select{
+    font-family: var(--font);
+    font-size: 15px;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    min-width: 180px;
+  }
+  .settings-row input[type="checkbox"]{
+    width: 22px; height: 22px;
+    accent-color: var(--purple);
+  }
+  .settings-actions{ margin-top: 28px; }
+  .field-status{ font-size: 13px; margin-left: 10px; color: #2ecc71; }
+  .field-status.err{ color: #c0392b; }
+
+  /* ---------- Update page ---------- */
+  .update-row{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    margin-bottom: 12px;
+    font-size: 18px;
+  }
+  .update-row.current{ background: var(--purple); color: #fff; border-color: var(--purple); }
+  .note-box{
+    margin-top: 24px;
+    background: #f7f7f7;
+    border-left: 4px solid var(--purple);
+    padding: 16px 20px;
+    font-size: 14px;
+    color: #444;
+    max-width: 700px;
+  }
+  .wipe-warning-badge{
+    display: inline-flex;
+    align-items: center;
+    margin-left: 8px;
+    color: #b3261e;
+    vertical-align: middle;
+    cursor: help;
+  }
+  .wipe-warning-badge svg{
+    width: 16px;
+    height: 16px;
+    display: block;
+  }
+
+  .known-issues-badge{
+    display: inline-block;
+    margin-left: 10px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .3px;
+    background: #a15c00;
+    color: #fff;
+    vertical-align: middle;
+  }
+
+  .known-issues-list{
+    margin: 0;
+    padding-left: 20px;
+    font-family: var(--font);
+    font-size: 13px;
+    color: #444;
+    line-height: 1.6;
+  }
+
+  .changelog-panel{
+    background: #fafafa;
+    border-bottom: 1px solid var(--border);
+    padding: 18px 20px;
+  }
+  .changelog-block{ margin-bottom: 18px; }
+  .changelog-block:last-child{ margin-bottom: 0; }
+  .changelog-block h4{
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    color: var(--black);
+  }
+  .changelog-diff{
+    background: #fff;
+    border: 1px solid var(--border);
+    padding: 12px 14px;
+    font-family: 'Consolas', 'Menlo', monospace;
+    font-size: 12.5px;
+    line-height: 1.5;
+    overflow-x: auto;
+    white-space: pre;
+    margin: 0;
+  }
+  .diff-add{ display: block; color: #1a7f37; }
+  .diff-rem{ display: block; color: #cf222e; }
+  .diff-ctx{ display: block; color: #444; }
+
+  /* ---------- Backup page ---------- */
+  .backup-actions{
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 700px;
+  }
+  .backup-actions .btn{ width: 100%; padding: 16px; font-size: 17px; }
+  .danger-row{ margin-top: 32px; }
+  .danger-row .btn{ background: #b3261e; }
+  .danger-row .btn:disabled{ background: #cfcfcf; color:#777; }
+  .progress-text{ margin-top: 16px; font-size: 14px; color: #555; }
+
+  @media (max-width: 860px){
+    .main-content{ flex-direction: column; }
+    .sidebar{ width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+    .sidebar ul{ display: flex; flex-wrap: wrap; }
+    .sidebar li a{ padding: 14px 16px; font-size: 15px; }
+    .list-panel, .device-layout{ flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- Unsupported browser screen -->
+  <div id="view-unsupported" class="fullscreen-view hidden">
+    <h1>Browser Not Supported</h1>
+    <p>Micro Companion talks to your micro:bit over the <strong>Web Serial API</strong>, which this browser doesn't implement.</p>
+    <div class="icon-row">
+      <span class="browser-pill ok">Chrome</span>
+      <span class="browser-pill ok">Edge</span>
+      <span class="browser-pill ok">Opera</span>
+      <span class="browser-pill">Safari &mdash; unsupported</span>
+      <span class="browser-pill">Firefox &mdash; unsupported</span>
+    </div>
+    <p>Please reopen this page in a Chromium-based browser (Chrome, Edge, or Opera) to connect your device.</p>
+  </div>
+
+  <!-- Connect landing screen -->
+  <div id="view-connect" class="fullscreen-view hidden">
+    <h1>Micro Companion</h1>
+    <p>Connect your MicroOS device (micro:bit) over USB to manage files, apps, settings, and backups.</p>
+    <button id="btn-connect" class="btn">Connect micro:bit</button>
+    <div id="connect-error" class="error-box hidden"></div>
+
+    <details id="connect-diagnostics" style="margin-top:28px;width:100%;max-width:640px;text-align:left;">
+      <summary style="cursor:pointer;font-size:13px;color:#777;">Diagnostics</summary>
+      <pre id="connect-log" style="margin-top:10px;background:#f7f7f7;border:1px solid var(--border);padding:12px;font-size:12px;max-height:220px;overflow:auto;white-space:pre-wrap;word-break:break-word;"></pre>
+      <button id="connect-log-copy" class="btn small secondary" style="margin-top:8px;">Copy Log</button>
+    </details>
+  </div>
+
+  <!-- Waiting / handshake screen -->
+  <div id="view-waiting" class="fullscreen-view hidden">
+    <div class="spinner"></div>
+    <h1>Waiting for micro:bit&hellip;</h1>
+    <p id="waiting-detail">Opening the serial port and pinging the device. Make sure MicroOS is running and the cable supports data.</p>
+    <button id="btn-waiting-cancel" class="btn secondary" style="margin-top:12px;">Cancel</button>
+  </div>
+
+  <!-- Main app -->
+  <div id="view-app" class="hidden">
+    <div class="topbar">
+      <div class="brand">Micro Companion</div>
+      <div class="status">
+        <span><span class="status-dot"></span><span id="status-text">Connected</span></span>
+        <span id="status-serial"></span>
+        <button id="btn-disconnect" class="btn small secondary" style="color:#fff;border-color:#fff;background:transparent;">Disconnect</button>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <div class="sidebar">
+        <ul id="nav-list">
+          <li data-page="Device"><a>Device</a></li>
+          <li data-page="UserFiles"><a>User Files</a></li>
+          <li data-page="UserApps"><a>User Apps</a></li>
+          <li data-page="Settings"><a>Settings</a></li>
+          <li data-page="Update"><a>Update</a></li>
+          <li data-page="Backup"><a>Backup</a></li>
+          <li data-page="Advanced"><a>Advanced</a></li>
+        </ul>
+      </div>
+
+      <div class="content">
+
+        <!-- Device -->
+        <section id="page-Device" class="page">
+          <h2 class="page-title">Device</h2>
+          <div class="device-layout">
+            <div class="device-info-list">
+              <div class="info-row"><div class="label">MicroOS Version</div><div class="value" id="dev-osversion">&mdash;</div></div>
+              <div class="info-row"><div class="label">Serial Number</div><div class="value" id="dev-serial">&mdash;</div></div>
+              <div class="info-row"><div class="label">Board Revision</div><div class="value" id="dev-board">&mdash;</div></div>
+              <div class="info-row">
+                <div class="label">Storage</div>
+                <div class="value" id="dev-storage-text">&mdash;</div>
+                <div class="storage-bar-track"><div class="storage-bar-fill" id="dev-storage-bar" style="width:0%"></div></div>
+              </div>
+              <div class="info-row"><div class="label">RAM Usage</div><div class="value" id="dev-ram">&mdash;</div></div>
+              <div class="info-row"><div class="label">CPU Clock Speed</div><div class="value" id="dev-cpu">&mdash;</div></div>
+            </div>
+            <img class="microbit-image" src="microbit.png" alt="micro:bit">
+          </div>
+        </section>
+
+        <!-- User Files -->
+        <section id="page-UserFiles" class="page">
+          <h2 class="page-title">User Files</h2>
+          <div class="list-panel">
+            <div class="file-list" id="files-list"></div>
+            <div class="preview-panel" id="files-preview">
+              <div class="preview-placeholder">Select a file to preview it.</div>
+            </div>
+          </div>
+          <div class="upload-bar">
+            <input type="file" id="files-upload-input" style="display:none;">
+            <button class="btn" id="files-upload-btn">Upload File</button>
+            <button class="btn secondary" id="files-refresh-btn">Refresh</button>
+            <span id="files-upload-status" class="field-status"></span>
+          </div>
+        </section>
+
+        <!-- User Apps -->
+        <section id="page-UserApps" class="page">
+          <h2 class="page-title">User Apps</h2>
+          <div class="list-panel">
+            <div class="file-list" id="apps-list"></div>
+            <div class="preview-panel" id="apps-preview">
+              <div class="preview-placeholder">Select an app to view details.</div>
+            </div>
+          </div>
+          <div class="upload-bar">
+            <input type="file" id="apps-upload-input" style="display:none;" accept=".nsa,.app">
+            <button class="btn" id="apps-upload-btn">Upload App</button>
+            <button class="btn secondary" id="apps-refresh-btn">Refresh</button>
+            <span id="apps-upload-status" class="field-status"></span>
+          </div>
+        </section>
+
+        <!-- Settings -->
+        <section id="page-Settings" class="page">
+          <h2 class="page-title">Settings</h2>
+          <div class="settings-list" id="settings-list">
+            <div class="settings-row">
+              <label for="set-radioChannel">Radio Channel</label>
+              <select id="set-radioChannel" data-field="radioChannel" data-type="int"></select>
+            </div>
+            <div class="settings-row">
+              <label for="set-username">Name</label>
+              <input type="text" id="set-username" data-field="username" data-type="string">
+            </div>
+            <div class="settings-row">
+              <label for="set-wallpaper">Wallpaper</label>
+              <select id="set-wallpaper" data-field="wallpaper" data-type="int">
+                <option value="0">Strings</option>
+                <option value="1">Squiggles</option>
+              </select>
+            </div>
+            <div class="settings-row">
+              <label for="set-darkMode">Dark Mode</label>
+              <input type="checkbox" id="set-darkMode" data-field="darkMode" data-type="bool">
+            </div>
+            <div class="settings-row">
+              <label for="set-theme">Theme</label>
+              <select id="set-theme" data-field="theme" data-type="int">
+                <option value="0">Default</option>
+                <option value="1">Blush</option>
+                <option value="2">Ocean</option>
+                <option value="3">Orange</option>
+              </select>
+            </div>
+            <div class="settings-row">
+              <label for="set-showClock">Show Clock</label>
+              <input type="checkbox" id="set-showClock" data-field="showClock" data-type="bool">
+            </div>
+            <div class="settings-row">
+              <label for="set-hour">Hour <span style="font-size:11px;color:#999;">(not persisted &mdash; resets to 12:00 on reboot)</span></label>
+              <input type="number" id="set-hour" min="0" max="23" step="1" data-clock-field="hour">
+            </div>
+            <div class="settings-row">
+              <label for="set-minute">Minute</label>
+              <input type="number" id="set-minute" min="0" max="59" step="1" data-clock-field="minute">
+            </div>
+            <div class="settings-row">
+              <label for="set-roomCode">Room Code</label>
+              <input type="text" id="set-roomCode" data-field="roomCode" data-type="string">
+            </div>
+          </div>
+          <div class="settings-actions">
+            <button class="btn" id="settings-save-btn">Save Settings</button>
+            <button class="btn secondary" id="settings-refresh-btn">Reload from Device</button>
+            <span id="settings-status" class="field-status"></span>
+          </div>
+        </section>
+
+        <!-- Update -->
+        <section id="page-Update" class="page">
+          <h2 class="page-title">Update</h2>
+          <div id="update-lite-notice" class="note-box hidden" style="border-left-color:#e67e22;margin-bottom:20px;">
+            This micro:bit is running a MicroOS build that doesn't support the file/settings/backup protocol this app
+            uses, so only firmware flashing is available here. No backup will be taken before updating &mdash;
+            back up anything important manually first if you can.
+          </div>
+          <div class="update-row current">
+            <span>Current</span>
+            <span id="update-current-version">&mdash;</span>
+          </div>
+          <div class="update-row">
+            <span>Latest</span>
+            <span style="display:flex;align-items:center;gap:16px;">
+              <span id="update-latest-version">&mdash;</span>
+              <button class="btn small hidden" id="update-latest-update-btn">Update to Latest</button>
+            </span>
+          </div>
+
+          <h3 style="font-family:var(--font);font-weight:600;font-size:18px;margin:28px 0 12px 0;">All Releases</h3>
+          <div class="file-list" id="update-releases-list" style="max-height:400px;"></div>
+
+          <div id="update-flash-panel" class="note-box hidden" style="border-left-color: var(--purple);">
+            <div id="update-flash-status" style="font-weight:600;margin-bottom:8px;font-size:16px;color:var(--black);"></div>
+            <div id="update-flash-detail" style="font-size:14px;color:#444;"></div>
+            <div id="update-flash-actions" style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap;"></div>
+          </div>
+          <input type="file" id="update-hex-file-input" style="display:none;" accept=".hex">
+        </section>
+
+        <!-- Backup -->
+        <section id="page-Backup" class="page">
+          <h2 class="page-title">Backup</h2>
+          <div class="backup-actions">
+            <button class="btn" id="backup-download-btn">Download Backup (.mosbak)</button>
+            <input type="file" id="backup-upload-input" style="display:none;" accept=".mosbak,application/json">
+            <button class="btn" id="backup-upload-btn">Upload Backup</button>
+            <button class="btn secondary" id="backup-download-zip-btn">Download All Files &amp; Apps (.zip)</button>
+            <div class="danger-row">
+              <button class="btn" id="backup-wipe-btn" title="Reflashes the device's current firmware from GitHub, wiping all files and settings">Wipe Device</button>
+            </div>
+            <div class="progress-text" id="backup-progress"></div>
+          </div>
+        </section>
+
+        <!-- Advanced -->
+        <section id="page-Advanced" class="page">
+          <h2 class="page-title">Advanced</h2>
+          <div class="note-box" style="border-left-color:#e67e22;">
+            Flashing an unreleased build means running code that hasn't gone through MicroOS's normal release
+            process. It may be unstable and may not support this app's backup/settings protocol. No backup is taken
+            automatically here &mdash; back up your files and settings from the Backup tab first if you care about them.
+          </div>
+
+          <h3 style="font-family:var(--font);font-weight:600;font-size:18px;margin:28px 0 12px 0;">Build the Latest Source</h3>
+          <p style="font-size:14px;color:#444;max-width:640px;">
+            MicroOS is a Microsoft MakeCode project, so building it from source needs MakeCode's own compiler.
+            This opens the MicroOS source in the MakeCode editor, where it compiles automatically &mdash; download
+            the resulting .hex from there, then flash it below.
+          </p>
+          <button class="btn" id="advanced-open-makecode-btn" style="margin-top:8px;">Open MicroOS Source in MakeCode</button>
+          <div style="font-size:12px;color:#999;margin-top:10px;max-width:640px;">
+            If that doesn't load the project directly, go to
+            <a href="https://makecode.microbit.org/" target="_blank" rel="noopener">makecode.microbit.org</a>,
+            choose Import &rarr; Import URL, and paste:
+            <code id="advanced-github-url">https://github.com/NotCryptid/MicroOS</code>
+            <button class="btn small secondary" id="advanced-copy-url-btn" style="margin-left:6px;">Copy</button>
+          </div>
+
+          <h3 style="font-family:var(--font);font-weight:600;font-size:18px;margin:28px 0 12px 0;">Flash a Custom .hex</h3>
+          <p style="font-size:14px;color:#444;max-width:640px;">
+            Once you have a .hex file (from MakeCode above, or from anywhere else), flash it the same way this app
+            flashes official releases &mdash; straight to the MICROBIT drive, with automatic reboot detection. Progress
+            shows on the Update tab.
+          </p>
+          <button class="btn" id="advanced-flash-custom-btn" style="margin-top:8px;">Flash Custom .hex&hellip;</button>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ============================= MicroOS serial client ============================= */
+
+  function utf8ToBase64(str){
+    const bytes = new TextEncoder().encode(str);
+    let bin = '';
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  }
+  function base64ToBytes(b64){
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes;
+  }
+  function base64ToUtf8(b64){
+    return new TextDecoder().decode(base64ToBytes(b64));
+  }
+
+  /* micro:bit's DAPLink debugger USB identity (both v1 and v2) — same filter MakeCode uses
+     to keep the browser's device picker limited to micro:bits instead of any serial device. */
+  const MICROBIT_USB_FILTERS = [{ usbVendorId: 0x0D28, usbProductId: 0x0204 }];
+
+  function isMicrobitPort(port){
+    try{
+      const info = port.getInfo();
+      return info.usbVendorId === 0x0D28 && info.usbProductId === 0x0204;
+    } catch (e){ return false; }
+  }
+
+  function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+  /* ---------- connect diagnostics log (visible on the Connect screen) ---------- */
+
+  function logDebug(msg){
+    const el = document.getElementById('connect-log');
+    if (!el) return;
+    const time = new Date().toTimeString().slice(0, 8);
+    el.textContent += '[' + time + '] ' + msg + '\n';
+    el.scrollTop = el.scrollHeight;
+  }
+
+  class MicroOSClient{
+    constructor(){
+      this.port = null;
+      this.reader = null;
+      this.writer = null;
+      this.pending = new Map();
+      this.nextId = 1;
+      this.buffer = '';
+      this._queue = Promise.resolve();
+      this.onDisconnect = null;
+    }
+
+    async connect(){
+      logDebug('Requesting port (filtered to micro:bit VID 0x0D28 / PID 0x0204)…');
+      const port = await navigator.serial.requestPort({ filters: MICROBIT_USB_FILTERS });
+      const info = (() => { try { return port.getInfo(); } catch (e) { return {}; } })();
+      logDebug('Port selected: VID=' + (info.usbVendorId != null ? '0x' + info.usbVendorId.toString(16) : '?') +
+        ' PID=' + (info.usbProductId != null ? '0x' + info.usbProductId.toString(16) : '?'));
+      logDebug('Opening port @115200 baud…');
+      await port.open({ baudRate: 115200 });
+      logDebug('Port opened.');
+      await this.attach(port);
+    }
+
+    /** Wire this client up to an already-open SerialPort (used both by connect() and
+     *  by the automatic post-flash reconnect, which reuses a port the browser already
+     *  granted permission for — no new picker prompt needed). */
+    async attach(port){
+      this.port = port;
+      this.pending = new Map();
+      this.nextId = 1;
+      this.buffer = '';
+      this._queue = Promise.resolve();
+
+      /* micro:bit's DAPLink USB-CDC bridge only forwards bytes to the target UART
+         once DTR is asserted (same reason Arduino-style boards need it) — Web Serial
+         doesn't raise it automatically on open(), so without this the port opens fine
+         but every request just times out with no reply. */
+      try {
+        await port.setSignals({ dataTerminalReady: true, requestToSend: true });
+        logDebug('DTR/RTS asserted.');
+      } catch (e) {
+        logDebug('setSignals() not supported by this backend: ' + e.message);
+      }
+
+      const textDecoder = new TextDecoderStream();
+      this._readableClosed = this.port.readable.pipeTo(textDecoder.writable).catch(() => {});
+      this.reader = textDecoder.readable.getReader();
+
+      const textEncoder = new TextEncoderStream();
+      this._writableClosed = textEncoder.readable.pipeTo(this.port.writable).catch(() => {});
+      this.writer = textEncoder.writable.getWriter();
+
+      this._readLoop();
+    }
+
+    async _readLoop(){
+      try{
+        while (true){
+          const { value, done } = await this.reader.read();
+          if (done) break;
+          if (value){
+            logDebug('RX raw: ' + JSON.stringify(value).slice(0, 300));
+            this.buffer += value;
+            let idx;
+            while ((idx = this.buffer.indexOf('\n')) >= 0){
+              const line = this.buffer.slice(0, idx);
+              this.buffer = this.buffer.slice(idx + 1);
+              if (line.trim()) this._handleLine(line);
+            }
+          }
+        }
+      } catch (e) {
+        logDebug('Read loop ended: ' + e.message);
+      }
+      for (const [, p] of this.pending) p.reject(new Error('device disconnected'));
+      this.pending.clear();
+      if (this.onDisconnect) this.onDisconnect();
+    }
+
+    _handleLine(line){
+      logDebug('RX line: ' + line);
+      let msg;
+      try { msg = JSON.parse(line); } catch (e) { logDebug('  (failed to parse as JSON: ' + e.message + ')'); return; }
+      const p = this.pending.get(msg.id);
+      if (p){
+        this.pending.delete(msg.id);
+        p.resolve(msg);
+      } else {
+        logDebug('  (no pending request matches id ' + msg.id + ')');
+      }
+    }
+
+    _sendOnce(cmd, params, timeoutMs){
+      const id = this.nextId++;
+      const payload = JSON.stringify(Object.assign({ id, cmd }, params)) + '\n';
+      logDebug('TX: ' + payload.trim());
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+          logDebug('TX id ' + id + ' (' + cmd + ') timed out after ' + timeoutMs + 'ms — no matching response received.');
+          this.pending.delete(id);
+          reject(new Error('timeout waiting for device response'));
+        }, timeoutMs);
+        this.pending.set(id, {
+          resolve: (msg) => { clearTimeout(timer); resolve(msg); },
+          reject
+        });
+        this.writer.write(payload).catch((err) => {
+          clearTimeout(timer);
+          this.pending.delete(id);
+          reject(err);
+        });
+      }).then((msg) => {
+        if (!msg.ok) throw new Error(msg.error || 'device error');
+        return msg;
+      });
+    }
+
+    send(cmd, params = {}, timeoutMs = 4000){
+      const task = () => this._sendOnce(cmd, params, timeoutMs);
+      const result = this._queue.then(task, task);
+      this._queue = result.then(() => {}, () => {});
+      return result;
+    }
+
+    ping(){ return this.send('ping', {}, 2000); }
+    deviceInfo(){ return this.send('device.info'); }
+    fsList(){ return this.send('fs.list'); }
+    fsRead(name, ext){ return this.send('fs.read', { name, ext }); }
+    fsWrite(name, ext, base64data){ return this.send('fs.write', { name, ext, data: base64data }, 8000); }
+    settingsList(){ return this.send('settings.list'); }
+    settingsSet(field, value){ return this.send('settings.set', { field, value }); }
+    settingsGetRaw(key){ return this.send('settings.getRaw', { key }); }
+    settingsSetRaw(key, value){ return this.send('settings.setRaw', { key, value }); }
+    clockGet(){ return this.send('clock.get'); }
+    clockSet(hour, minute){ return this.send('clock.set', { hour, minute }); }
+
+    async disconnect(){
+      try { await this.reader.cancel(); } catch (e) {}
+      try { this.writer.releaseLock(); } catch (e) {}
+      try { await this._readableClosed; } catch (e) {}
+      try { await this.port.close(); } catch (e) {}
+    }
+  }
+
+  /* ============================= App state / views ============================= */
+
+  const views = {
+    unsupported: document.getElementById('view-unsupported'),
+    connect: document.getElementById('view-connect'),
+    waiting: document.getElementById('view-waiting'),
+    app: document.getElementById('view-app')
+  };
+
+  function showView(name){
+    for (const k in views) views[k].classList.add('hidden');
+    views[name].classList.remove('hidden');
+  }
+
+  const client = new MicroOSClient();
+  let deviceInfoCache = null;
+  /* True once we've detected the connected device doesn't answer device.info --
+     i.e. it predates the JSON file/settings/backup protocol this app relies on.
+     Such devices get a stripped-down UI with only firmware flashing available. */
+  let isLiteDevice = false;
+  let filesCache = [];
+  let appIconCache = {};
+  let appNameCache = {};
+
+  const ICONS = { wrt: 'wrt.png', nsp: 'nsp.png', xcl: 'xcl.png' };
+
+  function iconFor(ext){
+    return ICONS[ext] || null;
+  }
+
+  function iconHtml(ext, size){
+    const src = iconFor(ext);
+    if (src) return '<img class="row-icon" src="' + src + '" alt="' + ext + '">';
+    return '<span class="row-icon-generic">' + (ext || '?').slice(0, 3).toUpperCase() + '</span>';
+  }
+
+  function formatBytes(n){
+    if (n === undefined || n === null) return '&mdash;';
+    if (n < 1024) return n + ' B';
+    return (n / 1024).toFixed(1) + ' KB';
+  }
+
+  /* ---------- NanoSDK app icon decoding ----------
+   * .nsa/.app binaries are "~"-delimited plain text (see Open_NanoSDK_App in
+   * MicroOS's nanosdk_runtime.ts): binary[0] = app name, binary[1] = an 8x8
+   * icon baked in at compile time as 64 hex nibbles, row-major, each nibble
+   * indexing MicroOS's 16-color palette (pxt.json "palette", reproduced
+   * below). Index 0 is transparent by MakeCode Arcade convention. Falls back
+   * to nanosdk_runtime.ts's own NANO_SDK_DEFAULT_ICON for missing/malformed
+   * data, exactly like the on-device runtime does. */
+  const MICROOS_PALETTE = [
+    '#000000', '#FFFFFF', '#590094', '#7A00B3', '#0148EF', '#0091FF', '#803d00', '#B67CFE',
+    '#008033', '#EF9EFF', '#FF00AE', '#FFAE00', '#32008F', '#969696', '#373737', '#000000'
+  ];
+  const NANO_SDK_DEFAULT_ICON_HEX = '0AAAABB0AA1AB1B3AA11B133AA11B133AB1B1132BB131122BB13312203332220';
+
+  /* Flat warning-triangle icon (miter joins, no rounded corners, matching the
+     app's square-cornered design language) for the pre-v1.1.0 data-wipe flag. */
+  // Inlined from triangle-warning.svg (kept in the same folder for reference/reuse)
+  // so its fill can follow currentColor and pick up the badge's red.
+  const WARNING_TRIANGLE_SVG =
+    '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+      '<path d="M13.5,10.5v5c0,.83-.67,1.5-1.5,1.5s-1.5-.67-1.5-1.5v-5c0-.83,.67-1.5,1.5-1.5s1.5,.67,1.5,1.5Zm-1.5,8.5c-.83,0-1.5,.67-1.5,1.5s.67,1.5,1.5,1.5,1.5-.67,1.5-1.5-.67-1.5-1.5-1.5Zm11.05-4.19L15.31,2.73c-.75-1.08-1.99-1.73-3.31-1.73s-2.56,.65-3.34,1.78L.99,14.76c-1.09,1.56-1.29,3.45-.52,4.92,.77,1.48,2.34,2.32,4.32,2.32h1.72c.83,0,1.5-.67,1.5-1.5s-.67-1.5-1.5-1.5h-1.72c-.48,0-1.33-.09-1.66-.71-.25-.48-.13-1.17,.35-1.87L11.15,4.44c.28-.4,.69-.44,.85-.44s.57,.04,.82,.39l7.74,12.08c.45,.64,.57,1.34,.32,1.82-.32,.62-1.18,.71-1.66,.71h-1.72c-.83,0-1.5,.67-1.5,1.5s.67,1.5,1.5,1.5h1.72c1.97,0,3.55-.85,4.32-2.32,.77-1.47,.57-3.36-.48-4.87Z"/>' +
+    '</svg>';
+
+  function decodeNsaIconToDataUrl(binaryText){
+    const parts = String(binaryText).split('~');
+    let hex = parts[1];
+    if (!hex || hex.toLowerCase() === 'default') hex = NANO_SDK_DEFAULT_ICON_HEX;
+    const size = 8;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    const imgData = ctx.createImageData(size, size);
+    for (let y = 0; y < size; y++){
+      for (let x = 0; x < size; x++){
+        const idx = y * size + x;
+        const ch = idx < hex.length ? hex.charAt(idx) : '0';
+        let val = parseInt(ch, 16);
+        if (isNaN(val)) val = 0;
+        const p = idx * 4;
+        if (val === 0){
+          imgData.data[p + 3] = 0;
+        } else {
+          const color = MICROOS_PALETTE[val] || '#000000';
+          imgData.data[p] = parseInt(color.slice(1, 3), 16);
+          imgData.data[p + 1] = parseInt(color.slice(3, 5), 16);
+          imgData.data[p + 2] = parseInt(color.slice(5, 7), 16);
+          imgData.data[p + 3] = 255;
+        }
+      }
+    }
+    ctx.putImageData(imgData, 0, 0);
+    return canvas.toDataURL();
+  }
+
+  /** The app's display name is the same "~"-delimited binary's first field
+   *  (binary[0] in Open_NanoSDK_App, nanosdk_runtime.ts) -- the name shown
+   *  in-app on the taskbar/title bar, which can differ from the on-disk
+   *  name.ext the file happens to be stored under. Falls back to the
+   *  filename if the content is empty/unparseable. */
+  function decodeNsaAppName(binaryText, fallback){
+    const parts = String(binaryText).split('~');
+    const name = parts[0];
+    return (name && name.trim()) ? name : fallback;
+  }
+
+  /* ---------- browser support check ---------- */
+
+  if (!('serial' in navigator)){
+    showView('unsupported');
+  } else {
+    showView('connect');
+  }
+
+  /* ---------- connect flow ---------- */
+
+  document.getElementById('btn-connect').addEventListener('click', async () => {
+    const errBox = document.getElementById('connect-error');
+    errBox.classList.add('hidden');
+    try{
+      showView('waiting');
+      document.getElementById('waiting-detail').textContent =
+        'Opening the serial port and pinging the device. Make sure MicroOS is running and the cable supports data.';
+      await client.connect();
+      try{
+        await client.ping();
+      } catch (pingErr){
+        /* the DTR-assert -> device-ready gap can be tight right after opening; give it one more shot */
+        document.getElementById('waiting-detail').textContent = 'First ping timed out, retrying…';
+        await sleep(500);
+        await client.ping();
+      }
+      client.onDisconnect = handleDeviceDisconnect;
+      await enterApp();
+    } catch (e){
+      try { await client.disconnect(); } catch (e2) { /* ignore */ }
+      showView('connect');
+      const hint = e.message === 'timeout waiting for device response'
+        ? ' — the port opened but the device never replied. Make sure it\'s actually running MicroOS (not another program), and try unplugging/replugging the USB cable.'
+        : '';
+      errBox.textContent = 'Could not connect: ' + e.message + hint;
+      errBox.classList.remove('hidden');
+    }
+  });
+
+  document.getElementById('btn-waiting-cancel').addEventListener('click', async () => {
+    try { await client.disconnect(); } catch (e) {}
+    showView('connect');
+  });
+
+  document.getElementById('btn-disconnect').addEventListener('click', async () => {
+    await client.disconnect();
+    resetToConnect();
+  });
+
+  function handleDeviceDisconnect(){
+    resetToConnect('The micro:bit was disconnected.');
+  }
+
+  function resetToConnect(message){
+    showView('connect');
+    if (message){
+      const errBox = document.getElementById('connect-error');
+      errBox.textContent = message;
+      errBox.classList.remove('hidden');
+    }
+  }
+
+  /* ---------- entering the main app ---------- */
+
+  async function enterApp(){
+    showView('app');
+    try{
+      await loadDeviceInfo();
+      isLiteDevice = false;
+    } catch (e){
+      /* Old MicroOS builds don't understand device.info (or anything else in this
+         app's JSON protocol) at all -- rather than dead-ending on a connect error,
+         fall back to a lite UI that only offers firmware flashing. */
+      logDebug('device.info failed (' + e.message + ') -- falling back to lite mode (flashing only).');
+      isLiteDevice = true;
+      deviceInfoCache = null;
+    }
+    applyLiteMode();
+
+    if (!pendingUpdateRestore){
+      try{
+        const stored = localStorage.getItem(PENDING_RESTORE_KEY);
+        if (stored) pendingUpdateRestore = JSON.parse(stored);
+      } catch (e) { /* storage unavailable */ }
+    }
+
+    if (pendingUpdateRestore){
+      navigateTo('Update');
+      if (isLiteDevice){
+        /* Can't restore what this device can't read back -- hand the backup to
+           the user instead of failing partway through runPendingRestore(). */
+        updateFlashPanel(
+          'Update complete.',
+          'This device doesn\'t support the file/settings protocol needed to restore your backup automatically. ' +
+          'Download it below and restore it once the device is back on a supported MicroOS version.'
+        );
+        updateFlashActions([{ label: 'Download backup (.mosbak)', secondary: true, onClick: () => downloadBackupJson(pendingUpdateRestore) }]);
+        pendingUpdateRestore = null;
+        try { localStorage.removeItem(PENDING_RESTORE_KEY); } catch (e2) { /* storage unavailable */ }
+      } else {
+        await runPendingRestore();
+      }
+    } else {
+      navigateTo(isLiteDevice ? 'Update' : 'Device');
+    }
+  }
+
+  /** Hides every nav page except Update (and blanks device-derived chrome) when
+   *  the connected device doesn't support this app's JSON protocol. */
+  function applyLiteMode(){
+    document.querySelectorAll('#nav-list li').forEach(li => {
+      li.classList.toggle('hidden', isLiteDevice && li.dataset.page !== 'Update');
+    });
+    const notice = document.getElementById('update-lite-notice');
+    if (notice) notice.classList.toggle('hidden', !isLiteDevice);
+    if (isLiteDevice) document.getElementById('status-serial').textContent = '';
+  }
+
+  async function loadDeviceInfo(){
+    const res = await client.deviceInfo();
+    deviceInfoCache = res;
+    document.getElementById('status-serial').textContent = res.serialNumber || '';
+    document.getElementById('dev-osversion').textContent = res.osVersion || '—';
+    document.getElementById('dev-serial').textContent = res.serialNumber || '—';
+    document.getElementById('dev-board').textContent = res.boardRevision
+      // "2.2" and "2.21" share the same interface-chip board id and can't be
+      // told apart in software (see boardRevision()'s doc comment) -- show
+      // "2.2X" rather than implying more precision than is actually known.
+      ? (res.boardRevision === '2.2' ? '2.2X' : res.boardRevision)
+      : 'Unknown';
+    document.getElementById('dev-ram').textContent = formatBytes(res.ramUsage) + ' / ' + formatBytes(res.ramCapacity);
+    document.getElementById('dev-cpu').textContent = (res.cpuSpeed || '—') + ' MHz';
+
+    const cap = res.storageCapacity || 1;
+    const usage = res.storageUsage || 0;
+    const pct = Math.min(100, (usage / cap) * 100);
+    document.getElementById('dev-storage-bar').style.width = pct.toFixed(1) + '%';
+    document.getElementById('dev-storage-text').textContent = formatBytes(usage) + ' / ' + formatBytes(cap);
+
+    document.getElementById('update-current-version').textContent = res.osVersion || '—';
+  }
+
+  /* ---------- sidebar navigation ---------- */
+
+  const navList = document.getElementById('nav-list');
+  navList.addEventListener('click', (e) => {
+    const li = e.target.closest('li[data-page]');
+    if (!li) return;
+    navigateTo(li.dataset.page);
+  });
+
+  function navigateTo(page){
+    document.querySelectorAll('#nav-list li').forEach(li => {
+      li.classList.toggle('active', li.dataset.page === page);
+    });
+    document.querySelectorAll('.page').forEach(sec => {
+      sec.classList.toggle('active', sec.id === 'page-' + page);
+    });
+    if (page === 'UserFiles') refreshFiles();
+    if (page === 'UserApps') refreshApps();
+    if (page === 'Settings') refreshSettings();
+    if (page === 'Update') loadUpdates();
+  }
+
+  /* ============================= Update ============================= */
+
+  const MICROOS_REPO_URL = 'https://github.com/NotCryptid/MicroOS';
+  const MICROOS_RELEASES_API = 'https://api.github.com/repos/NotCryptid/MicroOS/releases';
+  const MICROOS_HEX_ASSET_NAME = 'MicroOS-microbit.hex';
+  const MICROOS_LEGACY_HEX_ASSET_NAME = 'microbit.hex'; // releases up to v0.0.4 shipped it unprefixed
+  const MICROOS_WIPE_WARNING_BEFORE = [1, 1, 0]; // versions before this wipe all data on update
+  let updatesLoaded = false;
+
+  /** Parses a tag like "v1.0.0" or "v0.0.4-LTS-R1" down to [major, minor, patch],
+   *  ignoring any trailing suffix. Returns null if it doesn't start with a semver. */
+  function parseVersionTag(tag){
+    const m = String(tag).replace(/^v/i, '').match(/^(\d+)\.(\d+)\.(\d+)/);
+    if (!m) return null;
+    return [parseInt(m[1], 10), parseInt(m[2], 10), parseInt(m[3], 10)];
+  }
+
+  /** -1 / 0 / 1 comparison of two [major, minor, patch] triples, as returned by parseVersionTag(). */
+  function compareVersionParts(a, b){
+    for (let i = 0; i < 3; i++){
+      if (a[i] !== b[i]) return a[i] < b[i] ? -1 : 1;
+    }
+    return 0;
+  }
+
+  /** True if `tag` predates MICROOS_WIPE_WARNING_BEFORE, or its version can't be
+   *  parsed at all -- unparseable is treated as "warn" rather than silently trusted. */
+  function isPreWipeWarningVersion(tag){
+    const v = parseVersionTag(tag);
+    if (!v) return true;
+    for (let i = 0; i < 3; i++){
+      if (v[i] !== MICROOS_WIPE_WARNING_BEFORE[i]) return v[i] < MICROOS_WIPE_WARNING_BEFORE[i];
+    }
+    return false;
+  }
+
+  /** GitHub release names ("v1.0.0 | 2026.3") are the human-facing label the
+   *  project actually writes; the tag ("v1.0.0") is just the machine id used
+   *  for version comparisons and asset lookups. Falls back to the tag for
+   *  the rare release with no name set. */
+  function releaseLabel(r){
+    return (r.name && r.name.trim()) ? r.name : r.tag;
+  }
+
+  /** Pulls the "### <Heading>\n```diff\n...\n```" blocks out of a release's
+   *  markdown description for the three components MicroOS's release notes
+   *  actually track (MicroOS itself, NanoSDK, Void Kernel Micro) -- older
+   *  releases predate NanoSDK/sometimes omit Void Kernel Micro, so this only
+   *  returns whichever of the three are actually present. */
+  function parseChangelog(body){
+    if (!body) return [];
+    // GitHub serves release bodies with CRLF line endings -- normalize first,
+    // otherwise the literal \n right after "```diff" in the regex below never
+    // matches (it'd be looking at a \r there instead).
+    const normalized = body.replace(/\r\n/g, '\n');
+    const blocks = [];
+    const re = /###\s+([^\n]+)\n```diff\n([\s\S]*?)```/g;
+    let m;
+    while ((m = re.exec(normalized))){
+      const heading = m[1].trim();
+      if (!/^(microos|nanosdk|void kernel micro)\b/i.test(heading)) continue;
+      const content = m[2].replace(/\s+$/, '');
+      if (content) blocks.push({ heading, content });
+    }
+    return blocks;
+  }
+
+  /** Pulls the "# Known Issues" section out of a release's description --
+   *  either a "None yet"-style placeholder (no items) or a "- " bullet
+   *  list, running until the next H1 heading or end of body. */
+  function parseKnownIssues(body){
+    if (!body) return { count: 0, items: [] };
+    const normalized = body.replace(/\r\n/g, '\n');
+    const headingMatch = normalized.match(/^#\s*Known Issues\s*$/im);
+    if (!headingMatch) return { count: 0, items: [] };
+    const afterHeading = normalized.slice(headingMatch.index + headingMatch[0].length);
+    // Stop at the next H1 heading, if any -- otherwise this section runs to
+    // the end of the body. (Using indexOf/slice rather than a single regex
+    // with a $ lookahead: with the /m flag needed for the ^ heading anchor
+    // above, $ matches end-of-line too, not just end-of-string, which
+    // truncated this at the first bullet.)
+    const nextHeadingIdx = afterHeading.search(/\n#\s/);
+    const section = nextHeadingIdx < 0 ? afterHeading : afterHeading.slice(0, nextHeadingIdx);
+    const items = section.split('\n')
+      .map(line => line.trim())
+      .filter(line => /^[-*]\s+/.test(line))
+      .map(line => line.replace(/^[-*]\s+/, ''));
+    return { count: items.length, items };
+  }
+
+  function renderChangelogHtml(blocks, knownIssues){
+    let html = blocks.length
+      ? blocks.map(b => {
+          const lines = b.content.split('\n').map(line => {
+            const cls = line.charAt(0) === '+' ? 'diff-add' : line.charAt(0) === '-' ? 'diff-rem' : 'diff-ctx';
+            return '<span class="' + cls + '">' + escapeHtml(line || ' ') + '</span>';
+          }).join('\n');
+          return '<div class="changelog-block"><h4>' + escapeHtml(b.heading) + '</h4><pre class="changelog-diff">' + lines + '</pre></div>';
+        }).join('')
+      : '<div class="preview-placeholder">No MicroOS/NanoSDK/Void Kernel Micro changelog found in this release\'s description.</div>';
+
+    html += '<div class="changelog-block"><h4>Known Issues (' + knownIssues.count + ')</h4>' +
+      (knownIssues.count
+        ? '<ul class="known-issues-list">' + knownIssues.items.map(i => '<li>' + escapeHtml(i) + '</li>').join('') + '</ul>'
+        : '<div class="preview-placeholder" style="padding:4px 0;text-align:left;">None reported.</div>') +
+      '</div>';
+    return html;
+  }
+
+  async function loadUpdates(){
+    if (updatesLoaded) return;
+    updatesLoaded = true;
+    const listEl = document.getElementById('update-releases-list');
+    listEl.innerHTML = '<div class="empty-msg">Loading releases&hellip;</div>';
+    try{
+      const res = await fetch(MICROOS_RELEASES_API);
+      if (!res.ok) throw new Error('GitHub API error ' + res.status);
+      const releases = await res.json();
+
+      const withHex = releases.map(r => {
+        const asset = (r.assets || []).find(a => a.name === MICROOS_HEX_ASSET_NAME) ||
+                      (r.assets || []).find(a => a.name === MICROOS_LEGACY_HEX_ASSET_NAME);
+        if (!asset) return null;
+        return {
+          tag: r.tag_name,
+          name: r.name,
+          body: r.body,
+          prerelease: r.prerelease,
+          published: r.published_at,
+          url: asset.browser_download_url,
+          assetName: asset.name,
+          size: asset.size,
+          wipesData: isPreWipeWarningVersion(r.tag_name),
+          knownIssues: parseKnownIssues(r.body)
+        };
+      }).filter(Boolean);
+
+      if (!withHex.length){
+        listEl.innerHTML = '<div class="empty-msg">No ' + MICROOS_HEX_ASSET_NAME + ' releases found.</div>';
+        return;
+      }
+
+      const latest = withHex.find(r => !r.prerelease) || withHex[0];
+      document.getElementById('update-latest-version').textContent = releaseLabel(latest);
+      const latestBtn = document.getElementById('update-latest-update-btn');
+      latestBtn.classList.remove('hidden');
+      latestBtn.onclick = () => beginGuidedUpdate(latest);
+
+      listEl.innerHTML = '';
+      withHex.forEach(r => {
+        const row = document.createElement('div');
+        row.className = 'file-row';
+        row.style.cursor = 'default';
+
+        const changelogBtn = document.createElement('button');
+        changelogBtn.className = 'btn small secondary';
+        changelogBtn.style.marginLeft = '12px';
+        changelogBtn.textContent = 'Changelog';
+
+        const updateBtn = document.createElement('button');
+        updateBtn.className = 'btn small';
+        updateBtn.style.marginLeft = '8px';
+        updateBtn.textContent = 'Update';
+        updateBtn.addEventListener('click', () => beginGuidedUpdate(r));
+
+        row.innerHTML =
+          '<span>' + escapeHtml(releaseLabel(r)) +
+            (r.prerelease ? ' <span style="font-size:11px;opacity:.65;">(pre-release)</span>' : '') +
+            (r.wipesData ? ' <span class="wipe-warning-badge" title="Updating to this version wipes all files and settings">' + WARNING_TRIANGLE_SVG + '</span>' : '') +
+            (r.knownIssues.count ? ' <span class="known-issues-badge" title="' + escapeHtml(r.knownIssues.items.join('; ')) + '">' + r.knownIssues.count + ' KNOWN ISSUE' + (r.knownIssues.count === 1 ? '' : 'S') + '</span>' : '') +
+          '</span>' +
+          '<span class="row-meta">' + new Date(r.published).toLocaleDateString() + ' &middot; ' + formatBytes(r.size) + '</span>';
+        row.appendChild(changelogBtn);
+        row.appendChild(updateBtn);
+
+        const changelogPanel = document.createElement('div');
+        changelogPanel.className = 'changelog-panel hidden';
+        let changelogRendered = false;
+        changelogBtn.addEventListener('click', () => {
+          changelogPanel.classList.toggle('hidden');
+          if (!changelogRendered){
+            changelogPanel.innerHTML = renderChangelogHtml(parseChangelog(r.body), r.knownIssues);
+            changelogRendered = true;
+          }
+        });
+
+        listEl.appendChild(row);
+        listEl.appendChild(changelogPanel);
+      });
+    } catch (e){
+      updatesLoaded = false;
+      listEl.innerHTML = '<div class="empty-msg">Error loading releases: ' + escapeHtml(e.message) + '</div>';
+    }
+  }
+
+  /* ---------- fully automatic flashing: backup -> write hex to MICROBIT drive -> reboot -> auto-reconnect -> auto-restore ---------- */
+
+  const PENDING_RESTORE_KEY = 'microos_pending_restore';
+  let pendingUpdateRestore = null;
+  let cachedMicrobitDirHandle = null;
+
+  function updateFlashPanel(status, detailHtml){
+    const panel = document.getElementById('update-flash-panel');
+    panel.classList.remove('hidden');
+    document.getElementById('update-flash-status').textContent = status;
+    document.getElementById('update-flash-detail').innerHTML = detailHtml;
+  }
+
+  function updateFlashActions(buttons){
+    const actionsEl = document.getElementById('update-flash-actions');
+    actionsEl.innerHTML = '';
+    buttons.forEach(({ label, onClick, secondary }) => {
+      const btn = document.createElement('button');
+      btn.className = 'btn' + (secondary ? ' secondary' : '');
+      btn.textContent = label;
+      btn.addEventListener('click', onClick);
+      actionsEl.appendChild(btn);
+    });
+  }
+
+  /** GitHub release assets (unlike raw.githubusercontent.com file contents) send no
+   *  Access-Control-Allow-Origin header on either the redirect or the final signed
+   *  blob-storage URL, on any endpoint (browser_download_url or the REST API's
+   *  /releases/assets/{id}, both verified directly) -- so fetch()/XHR can never read
+   *  the bytes cross-origin here, full stop. A plain download link works fine
+   *  (navigation isn't CORS-restricted), so: trigger that, then have the user hand
+   *  the resulting local file back to us via a file input, which reads its bytes
+   *  with zero network request involved. One unavoidable click, not a bug to hide.
+   */
+  function triggerHexDownload(release){
+    triggerFileDownload(release.url, release.assetName);
+  }
+
+  function promptForLocalHexFile(expectedFilename){
+    return new Promise((resolve, reject) => {
+      const input = document.getElementById('update-hex-file-input');
+      const btn = document.createElement('button');
+      btn.className = 'btn';
+      btn.textContent = 'Select Downloaded ' + expectedFilename;
+      btn.addEventListener('click', () => input.click());
+      updateFlashActions([]);
+      document.getElementById('update-flash-actions').appendChild(btn);
+
+      const onChange = async () => {
+        input.removeEventListener('change', onChange);
+        const file = input.files[0];
+        input.value = '';
+        if (!file){ reject(new Error('No file selected.')); return; }
+        try{
+          resolve(new Uint8Array(await file.arrayBuffer()));
+        } catch (e){ reject(e); }
+      };
+      input.addEventListener('change', onChange);
+    });
+  }
+
+  /** Gets write access to the micro:bit's MICROBIT mass-storage drive via the File
+   *  System Access API. Writing a .hex file into it is exactly what drag-and-drop
+   *  does — DAPLink picks it up and flashes automatically, no manual copy needed.
+   *  The permission is cached in memory so repeat flashes in the same session don't
+   *  reprompt (the browser itself remembers the grant across reloads). */
+  async function pickMicrobitDrive(){
+    if (!window.showDirectoryPicker){
+      throw new Error('Automatic flashing needs the File System Access API (Chrome/Edge on desktop).');
+    }
+    if (cachedMicrobitDirHandle){
+      try{
+        const perm = await cachedMicrobitDirHandle.queryPermission({ mode: 'readwrite' });
+        if (perm === 'granted') return cachedMicrobitDirHandle;
+        if (perm === 'prompt' && (await cachedMicrobitDirHandle.requestPermission({ mode: 'readwrite' })) === 'granted'){
+          return cachedMicrobitDirHandle;
+        }
+      } catch (e) { /* handle went stale (drive unmounted) — fall through and re-pick */ }
+    }
+    const handle = await window.showDirectoryPicker({ id: 'microbit-drive', mode: 'readwrite' });
+    if (handle.name.toUpperCase() !== 'MICROBIT'){
+      const proceed = window.confirm('Selected folder is named "' + handle.name + '", not "MICROBIT". Use it anyway?');
+      if (!proceed) throw new Error('MICROBIT drive was not selected.');
+    }
+    cachedMicrobitDirHandle = handle;
+    return handle;
+  }
+
+  async function writeHexToDrive(dirHandle, bytes, filename){
+    const fileHandle = await dirHandle.getFileHandle(filename, { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(bytes);
+    await writable.close();
+  }
+
+  /** After DAPLink reboots into the new image, the CDC serial interface drops and
+   *  re-enumerates. navigator.serial.getPorts() returns ports already permitted to
+   *  this origin without a new picker, so we poll it and re-ping until the device
+   *  answers again — a real automatic reconnect, no user click required. */
+  async function waitForMicrobitReconnect(timeoutMs, onStatus){
+    const start = Date.now();
+    await sleep(2500);
+    while (Date.now() - start < timeoutMs){
+      let ports = [];
+      try{ ports = await navigator.serial.getPorts(); } catch (e) { /* ignore */ }
+      for (const p of ports.filter(isMicrobitPort)){
+        try{ await p.open({ baudRate: 115200 }); }
+        catch (e){ continue; }
+        try{
+          await client.attach(p);
+          await client.ping();
+          return true;
+        } catch (e){
+          try { await p.close(); } catch (e2) { /* ignore */ }
+        }
+      }
+      if (onStatus) onStatus(Math.round((Date.now() - start) / 1000));
+      await sleep(1500);
+    }
+    return false;
+  }
+
+  async function findReleaseHexForVersion(version){
+    const res = await fetch(MICROOS_RELEASES_API);
+    if (!res.ok) throw new Error('GitHub API error ' + res.status);
+    const releases = await res.json();
+    const candidates = version.startsWith('v') ? [version] : ['v' + version, version];
+    for (const tag of candidates){
+      const r = releases.find(rel => rel.tag_name === tag);
+      const asset = r && ((r.assets || []).find(a => a.name === MICROOS_HEX_ASSET_NAME) ||
+                          (r.assets || []).find(a => a.name === MICROOS_LEGACY_HEX_ASSET_NAME));
+      if (asset) return { tag: r.tag_name, name: r.name, url: asset.browser_download_url, assetName: asset.name, wipesData: isPreWipeWarningVersion(r.tag_name) };
+    }
+    throw new Error('No GitHub release matching the device\'s current version ("' + version + '") has a ' + MICROOS_HEX_ASSET_NAME + ' asset.');
+  }
+
+  /**
+   * Full automatic flash pipeline: optional backup -> download hex -> write straight
+   * to the MICROBIT drive -> wait for reboot -> auto-reconnect -> optional restore.
+   */
+  /** Re-probes device.info after a flash and re-applies lite mode accordingly --
+   *  a freshly-flashed build (an official downgrade, or a custom Advanced-tab
+   *  build) might support a different feature set than what was connected before. */
+  async function reenterAppAfterFlash(){
+    client.onDisconnect = handleDeviceDisconnect;
+    showView('app');
+    try{
+      await loadDeviceInfo();
+      isLiteDevice = false;
+    } catch (e){
+      logDebug('device.info failed after flash (' + e.message + ') -- lite mode.');
+      isLiteDevice = true;
+      deviceInfoCache = null;
+    }
+    applyLiteMode();
+    navigateTo('Update');
+  }
+
+  async function performAutomaticFlash(release, { withBackup, label }){
+    updateFlashActions([]);
+    let backup = null;
+
+    try{
+      if (withBackup){
+        updateFlashPanel(label + ': backing up device…', 'Reading settings and files before flashing.');
+        backup = await collectDeviceBackup((msg) => updateFlashPanel(label + ': backing up device…', escapeHtml(msg)));
+        backup.updateTarget = release.tag;
+        pendingUpdateRestore = backup;
+        try { localStorage.setItem(PENDING_RESTORE_KEY, JSON.stringify(backup)); } catch (e) { /* storage unavailable */ }
+      }
+
+      updateFlashPanel(label + ': downloading firmware…', 'Starting the download for ' + escapeHtml(release.assetName) + ' (' + escapeHtml(releaseLabel(release)) + ')&hellip;');
+      triggerHexDownload(release);
+      updateFlashPanel(
+        label + ': select the downloaded file',
+        'GitHub doesn\'t allow web pages to read release files directly, so this one click is unavoidable. ' +
+        'Once your browser finishes downloading <strong>' + escapeHtml(release.assetName) + '</strong>, click below and pick it from your Downloads folder.'
+      );
+      const hexBytes = await promptForLocalHexFile(release.assetName);
+
+      updateFlashPanel(label + ': select the MICROBIT drive', 'Choose the micro:bit\'s <strong>MICROBIT</strong> USB drive in the picker (only needed once per session).');
+      const dirHandle = await pickMicrobitDrive();
+
+      updateFlashPanel(label + ': writing firmware…', 'Copying ' + escapeHtml(release.assetName) + ' onto the MICROBIT drive. Do not unplug the device.');
+      client.onDisconnect = null; /* this disconnect is intentional — don't bounce back to the connect screen */
+      await client.disconnect();
+      await writeHexToDrive(dirHandle, hexBytes, release.assetName);
+
+      updateFlashPanel(label + ': flashing…', 'The micro:bit is flashing itself and will reboot automatically.');
+      const reconnected = await waitForMicrobitReconnect(90000, (secs) => {
+        updateFlashPanel(label + ': waiting for reboot…', 'Still waiting for the micro:bit to come back online (' + secs + 's). This is automatic — no action needed.');
+      });
+
+      if (!reconnected){
+        updateFlashPanel(
+          label + ': flashed, but auto-reconnect timed out',
+          'The firmware was written successfully, but the device didn\'t reappear in time. Plug it back in if needed, then reconnect manually.' +
+          (withBackup ? ' Your backup is saved and will be restored automatically once you reconnect.' : '')
+        );
+        updateFlashActions([{ label: 'Reconnect Manually', onClick: () => resetToConnect() }]);
+        return;
+      }
+
+      await reenterAppAfterFlash();
+
+      if (withBackup){
+        await runPendingRestore();
+      } else {
+        updateFlashPanel(label + ' complete.', 'The micro:bit was reflashed with ' + escapeHtml(releaseLabel(release)) + '.');
+      }
+    } catch (e){
+      updateFlashPanel(label + ' failed.', 'Error: ' + escapeHtml(e.message) + (backup ? ' Your backup is still saved &mdash; retry from the Backup tab if needed.' : ''));
+      updateFlashActions(backup ? [{ label: 'Download backup (.mosbak)', secondary: true, onClick: () => downloadBackupJson(backup, release.tag) }] : []);
+    }
+  }
+
+  async function beginGuidedUpdate(release){
+    const wipeNotice = release.wipesData
+      ? '\n\nWARNING: ' + releaseLabel(release) + ' predates v1.1.0, and updating to any version before v1.1.0 wipes ALL data ' +
+        'on the device regardless of this app\'s backup step. The backup will still be taken and an automatic restore ' +
+        'attempted afterward, but it is not guaranteed to succeed against this version — download the .mosbak backup ' +
+        'as a safety net if this matters to you.'
+      : '';
+    const proceed = isLiteDevice
+      ? window.confirm(
+          'This device doesn\'t support this app\'s backup/settings protocol, so no backup will be taken. ' +
+          'This will automatically flash ' + releaseLabel(release) + ' (' + release.assetName + '). Continue?' + wipeNotice
+        )
+      : window.confirm(
+          'This will back up every file and setting, then automatically flash ' + releaseLabel(release) +
+          ' (' + release.assetName + ') and restore everything afterward. Continue?' + wipeNotice
+        );
+    if (!proceed) return;
+    await performAutomaticFlash(release, { withBackup: !isLiteDevice, label: 'Update' });
+  }
+
+  async function beginWipeReflash(){
+    const progress = document.getElementById('backup-progress');
+    if (!deviceInfoCache || !deviceInfoCache.osVersion){
+      progress.textContent = 'Error: current device version is unknown — open the Device tab first.';
+      return;
+    }
+    const proceed = window.confirm(
+      'This reflashes the device\'s CURRENT firmware (' + deviceInfoCache.osVersion + ') from GitHub, which wipes all files and settings ' +
+      '(no backup is taken first). Continue?'
+    );
+    if (!proceed) return;
+    try{
+      progress.textContent = 'Looking up the current firmware release on GitHub…';
+      const release = await findReleaseHexForVersion(deviceInfoCache.osVersion);
+      navigateTo('Update');
+      await performAutomaticFlash(release, { withBackup: false, label: 'Wipe' });
+    } catch (e){
+      progress.textContent = 'Error: ' + e.message;
+    }
+  }
+
+  async function runPendingRestore(){
+    updateFlashActions([]);
+    updateFlashPanel('Restoring backup from before the update…', 'Reconnected to device. Writing files and settings back.');
+    try{
+      await restoreDeviceBackup(pendingUpdateRestore, (msg) => {
+        updateFlashPanel('Restoring backup from before the update…', escapeHtml(msg));
+      });
+      updateFlashPanel('Update complete.', 'All files and settings have been restored.');
+      pendingUpdateRestore = null;
+      try { localStorage.removeItem(PENDING_RESTORE_KEY); } catch (e) { /* storage unavailable */ }
+      await loadDeviceInfo();
+    } catch (e){
+      updateFlashPanel('Restore failed.', 'Error: ' + escapeHtml(e.message) + '. Your backup is still saved &mdash; try again, or restore it manually from the Backup tab.');
+      updateFlashActions([
+        { label: 'Retry Restore', onClick: runPendingRestore },
+        { label: 'Download backup (.mosbak)', secondary: true, onClick: () => downloadBackupJson(pendingUpdateRestore) }
+      ]);
+    }
+  }
+
+  /** Advanced-tab flow: flash an arbitrary .hex the user already has (e.g. exported from
+   *  the MakeCode editor after building MicroOS from source) — same drive-write/reboot-wait
+   *  pipeline as an official release, but with no backup step and no known asset name. */
+  async function flashCustomHexFile(){
+    navigateTo('Update');
+    updateFlashActions([]);
+    try{
+      updateFlashPanel('Custom build: select your .hex file', 'Choose the .hex file you built or downloaded.');
+      const hexBytes = await promptForLocalHexFile('.hex file');
+
+      updateFlashPanel('Custom build: select the MICROBIT drive', 'Choose the micro:bit\'s <strong>MICROBIT</strong> USB drive in the picker (only needed once per session).');
+      const dirHandle = await pickMicrobitDrive();
+
+      updateFlashPanel('Custom build: writing firmware…', 'Copying the custom build onto the MICROBIT drive. Do not unplug the device.');
+      client.onDisconnect = null; /* this disconnect is intentional — don't bounce back to the connect screen */
+      await client.disconnect();
+      await writeHexToDrive(dirHandle, hexBytes, 'custom-build.hex');
+
+      updateFlashPanel('Custom build: flashing…', 'The micro:bit is flashing itself and will reboot automatically.');
+      const reconnected = await waitForMicrobitReconnect(90000, (secs) => {
+        updateFlashPanel('Custom build: waiting for reboot…', 'Still waiting for the micro:bit to come back online (' + secs + 's). This is automatic — no action needed.');
+      });
+
+      if (!reconnected){
+        updateFlashPanel(
+          'Custom build flashed, but auto-reconnect timed out',
+          'The firmware was written successfully, but the device didn\'t reappear in time. Plug it back in if needed, then reconnect manually.'
+        );
+        updateFlashActions([{ label: 'Reconnect Manually', onClick: () => resetToConnect() }]);
+        return;
+      }
+
+      await reenterAppAfterFlash();
+      updateFlashPanel('Custom build flashed.', 'No backup was taken and none was restored — this was an unreleased build, not an official update.');
+    } catch (e){
+      updateFlashPanel('Custom build flash failed.', 'Error: ' + escapeHtml(e.message));
+      updateFlashActions([]);
+    }
+  }
+
+  /* ============================= User Files ============================= */
+
+  async function refreshFiles(){
+    const listEl = document.getElementById('files-list');
+    listEl.innerHTML = '<div class="empty-msg">Loading&hellip;</div>';
+    try{
+      const res = await client.fsList();
+      filesCache = (res.files || []).filter(f => !['nsa', 'app'].includes(f.ext));
+      renderFileRows(listEl, filesCache, onFileSelect);
+    } catch (e){
+      listEl.innerHTML = '<div class="empty-msg">Error: ' + e.message + '</div>';
+    }
+  }
+
+  function renderFileRows(listEl, files, onSelect, getIconHtml, getLabel){
+    if (!files.length){
+      listEl.innerHTML = '<div class="empty-msg">No files on this device.</div>';
+      return;
+    }
+    listEl.innerHTML = '';
+    files.forEach(f => {
+      const row = document.createElement('div');
+      row.className = 'file-row';
+      row.dataset.name = f.name;
+      row.dataset.ext = f.ext;
+      const label = getLabel ? getLabel(f) : (f.name + '.' + f.ext);
+      row.innerHTML = (getIconHtml ? getIconHtml(f) : iconHtml(f.ext)) +
+        '<span>' + escapeHtml(label) + '</span>' +
+        '<span class="row-meta">' + formatBytes(f.size) + '</span>';
+      row.addEventListener('click', () => {
+        listEl.querySelectorAll('.file-row').forEach(r => r.classList.remove('active'));
+        row.classList.add('active');
+        onSelect(f, row);
+      });
+      listEl.appendChild(row);
+    });
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  async function onFileSelect(file){
+    const preview = document.getElementById('files-preview');
+    preview.innerHTML = '<div class="preview-placeholder">Loading&hellip;</div>';
+    try{
+      const res = await client.fsRead(file.name, file.ext);
+      renderFilePreview(preview, res);
+    } catch (e){
+      preview.innerHTML = '<div class="preview-placeholder">Error: ' + escapeHtml(e.message) + '</div>';
+    }
+  }
+
+  function renderFilePreview(preview, res){
+    const bytes = base64ToBytes(res.data);
+    let bodyHtml;
+
+    if (res.ext === 'wrt' || res.ext === 'nsp'){
+      const text = new TextDecoder().decode(bytes);
+      bodyHtml = '<pre>' + escapeHtml(text) + '</pre>';
+    } else if (res.ext === 'xcl'){
+      bodyHtml = renderXclTable(new TextDecoder().decode(bytes));
+    } else {
+      bodyHtml = '<div class="preview-placeholder">No preview available for .' + escapeHtml(res.ext) + ' files.</div>';
+    }
+
+    preview.innerHTML =
+      '<div class="preview-header">' +
+        iconHtml(res.ext) +
+        '<div><div class="preview-name">' + escapeHtml(res.name) + '.' + escapeHtml(res.ext) + '</div>' +
+        '<div class="preview-size">' + formatBytes(bytes.length) + '</div></div>' +
+      '</div>' +
+      '<div class="preview-body">' + bodyHtml + '</div>' +
+      '<div style="margin-top:16px;"><button class="btn small" id="preview-download-btn">Download</button></div>';
+
+    document.getElementById('preview-download-btn').addEventListener('click', () => {
+      downloadBytes(bytes, res.name + '.' + res.ext);
+    });
+  }
+
+  function renderXclTable(text){
+    let grid = null;
+    try{
+      const parsed = JSON.parse(text);
+      if (Array.isArray(parsed) && Array.isArray(parsed[0])) grid = parsed;
+    } catch (e) { /* not JSON, fall through */ }
+
+    if (!grid){
+      const lines = text.replace(/\r/g, '').split('\n').filter((l, i, arr) => !(i === arr.length - 1 && l === ''));
+      const delim = lines.some(l => l.includes('\t')) ? '\t' : ',';
+      grid = lines.map(l => l.split(delim));
+    }
+
+    if (!grid.length) return '<div class="preview-placeholder">Empty spreadsheet.</div>';
+
+    const cols = Math.max(...grid.map(r => r.length));
+    let colLetters = [];
+    for (let c = 0; c < cols; c++) colLetters.push(String.fromCharCode(65 + (c % 26)));
+
+    let html = '<div class="xcl-table-wrap"><table class="xcl-table"><thead><tr><th></th>';
+    colLetters.forEach(l => html += '<th>' + l + '</th>');
+    html += '</tr></thead><tbody>';
+    grid.forEach((row, i) => {
+      html += '<tr><td class="rownum">' + (i + 1) + '</td>';
+      for (let c = 0; c < cols; c++){
+        html += '<td>' + escapeHtml(row[c] !== undefined ? row[c] : '') + '</td>';
+      }
+      html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+    return html;
+  }
+
+  function downloadBytes(bytes, filename){
+    const blob = new Blob([bytes]);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  /* ---------- shared backup / restore (used by Backup page and guided firmware update) ---------- */
+
+  async function collectDeviceBackup(onProgress){
+    if (onProgress) onProgress('Reading settings…');
+    const settingsRes = await client.settingsList();
+    if (onProgress) onProgress('Listing files…');
+    const listRes = await client.fsList();
+    const files = [];
+    for (const f of (listRes.files || [])){
+      if (onProgress) onProgress('Reading ' + f.name + '.' + f.ext + '…');
+      const fileRes = await client.fsRead(f.name, f.ext);
+      files.push({ name: fileRes.name, ext: fileRes.ext, data: fileRes.data });
+    }
+    return {
+      createdAt: new Date().toISOString(),
+      /* Only the OS version travels with the backup -- it's needed to block restoring a
+         newer-version backup onto older firmware (see restoreDeviceBackup below). Everything
+         else in device.info (serial number, RAM/storage usage, board revision, ...) describes
+         the specific unit that made the backup rather than the data being backed up, and has
+         no business ending up in a file that might get shared or reused on another device. */
+      device: { osVersion: deviceInfoCache && deviceInfoCache.osVersion },
+      settings: settingsRes.settings,
+      files: files
+    };
+  }
+
+  async function restoreDeviceBackup(backup, onProgress){
+    const backupVersion = backup.device && parseVersionTag(backup.device.osVersion);
+    const currentVersion = deviceInfoCache && parseVersionTag(deviceInfoCache.osVersion);
+    if (backupVersion && currentVersion && compareVersionParts(backupVersion, currentVersion) > 0){
+      throw new Error(
+        'This backup was made on MicroOS ' + backup.device.osVersion + ', which is newer than the connected ' +
+        'device\'s ' + deviceInfoCache.osVersion + '. Update the device to ' + backup.device.osVersion +
+        ' or later before restoring this backup.'
+      );
+    }
+    if (backup.settings){
+      for (const field of Object.keys(backup.settings)){
+        if (onProgress) onProgress('Restoring setting: ' + field + '…');
+        try { await client.settingsSet(field, backup.settings[field]); } catch (err) { /* skip unknown field */ }
+      }
+    }
+    if (Array.isArray(backup.files)){
+      for (const f of backup.files){
+        if (onProgress) onProgress('Restoring file: ' + f.name + '.' + f.ext + '…');
+        await client.fsWrite(f.name, f.ext, f.data);
+      }
+    }
+  }
+
+  function downloadBackupJson(backup, filenameHint){
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'microos-backup-' + (filenameHint || (deviceInfoCache && deviceInfoCache.serialNumber) || 'device') + '.mosbak';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  /* ---------- minimal ZIP writer (stored/uncompressed entries — no external deps) ---------- */
+
+  const CRC_TABLE = (() => {
+    const table = [];
+    for (let n = 0; n < 256; n++){
+      let c = n;
+      for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      table[n] = c >>> 0;
+    }
+    return table;
+  })();
+
+  function crc32(bytes){
+    let crc = 0xFFFFFFFF;
+    for (let i = 0; i < bytes.length; i++) crc = CRC_TABLE[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+    return (crc ^ 0xFFFFFFFF) >>> 0;
+  }
+
+  function dosDateTime(date){
+    const time = ((date.getHours() & 0x1F) << 11) | ((date.getMinutes() & 0x3F) << 5) | ((date.getSeconds() >> 1) & 0x1F);
+    const day = (((date.getFullYear() - 1980) & 0x7F) << 9) | (((date.getMonth() + 1) & 0xF) << 5) | (date.getDate() & 0x1F);
+    return { time, day };
+  }
+
+  /** Builds an uncompressed (stored) ZIP archive from [{name, data: Uint8Array}] entries.
+   *  No external library needed — every mainstream unzip tool reads stored entries fine. */
+  function buildZip(entries){
+    const encoder = new TextEncoder();
+    const { time, day } = dosDateTime(new Date());
+    const localParts = [];
+    const centralParts = [];
+    let offset = 0;
+
+    entries.forEach(entry => {
+      const nameBytes = encoder.encode(entry.name);
+      const data = entry.data;
+      const crc = crc32(data);
+      const size = data.length;
+
+      const localHeader = new DataView(new ArrayBuffer(30));
+      localHeader.setUint32(0, 0x04034b50, true);
+      localHeader.setUint16(4, 20, true);
+      localHeader.setUint16(6, 0, true);
+      localHeader.setUint16(8, 0, true);
+      localHeader.setUint16(10, time, true);
+      localHeader.setUint16(12, day, true);
+      localHeader.setUint32(14, crc, true);
+      localHeader.setUint32(18, size, true);
+      localHeader.setUint32(22, size, true);
+      localHeader.setUint16(26, nameBytes.length, true);
+      localHeader.setUint16(28, 0, true);
+      const localHeaderBytes = new Uint8Array(localHeader.buffer);
+      localParts.push(localHeaderBytes, nameBytes, data);
+
+      const centralHeader = new DataView(new ArrayBuffer(46));
+      centralHeader.setUint32(0, 0x02014b50, true);
+      centralHeader.setUint16(4, 20, true);
+      centralHeader.setUint16(6, 20, true);
+      centralHeader.setUint16(8, 0, true);
+      centralHeader.setUint16(10, 0, true);
+      centralHeader.setUint16(12, time, true);
+      centralHeader.setUint16(14, day, true);
+      centralHeader.setUint32(16, crc, true);
+      centralHeader.setUint32(20, size, true);
+      centralHeader.setUint32(24, size, true);
+      centralHeader.setUint16(28, nameBytes.length, true);
+      centralHeader.setUint16(30, 0, true);
+      centralHeader.setUint16(32, 0, true);
+      centralHeader.setUint16(34, 0, true);
+      centralHeader.setUint16(36, 0, true);
+      centralHeader.setUint32(38, 0, true);
+      centralHeader.setUint32(42, offset, true);
+      const centralHeaderBytes = new Uint8Array(centralHeader.buffer);
+      centralParts.push(centralHeaderBytes, nameBytes);
+
+      offset += localHeaderBytes.length + nameBytes.length + data.length;
+    });
+
+    const centralDirOffset = offset;
+    const centralSize = centralParts.reduce((sum, p) => sum + p.length, 0);
+
+    const endRecord = new DataView(new ArrayBuffer(22));
+    endRecord.setUint32(0, 0x06054b50, true);
+    endRecord.setUint16(4, 0, true);
+    endRecord.setUint16(6, 0, true);
+    endRecord.setUint16(8, entries.length, true);
+    endRecord.setUint16(10, entries.length, true);
+    endRecord.setUint32(12, centralSize, true);
+    endRecord.setUint32(16, centralDirOffset, true);
+    endRecord.setUint16(20, 0, true);
+
+    const allParts = [...localParts, ...centralParts, new Uint8Array(endRecord.buffer)];
+    const totalLen = allParts.reduce((sum, p) => sum + p.length, 0);
+    const result = new Uint8Array(totalLen);
+    let pos = 0;
+    allParts.forEach(p => { result.set(p, pos); pos += p.length; });
+    return result;
+  }
+
+  function triggerFileDownload(url, filename){
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  document.getElementById('files-refresh-btn').addEventListener('click', refreshFiles);
+  document.getElementById('files-upload-btn').addEventListener('click', () => {
+    document.getElementById('files-upload-input').click();
+  });
+  document.getElementById('files-upload-input').addEventListener('change', (e) => {
+    handleUpload(e.target.files[0], 'files-upload-status', refreshFiles);
+    e.target.value = '';
+  });
+
+  async function handleUpload(file, statusElId, onDone){
+    if (!file) return;
+    const statusEl = document.getElementById(statusElId);
+    statusEl.className = 'field-status';
+    statusEl.textContent = 'Uploading…';
+    const dot = file.name.lastIndexOf('.');
+    const name = dot >= 0 ? file.name.slice(0, dot) : file.name;
+    const ext = dot >= 0 ? file.name.slice(dot + 1) : 'bin';
+    if (name.includes('.') || name.includes('~') || name.includes('§') || name === 'Home'){
+      statusEl.className = 'field-status err';
+      statusEl.textContent = 'Invalid file name.';
+      return;
+    }
+    try{
+      const buf = await file.arrayBuffer();
+      const bytes = new Uint8Array(buf);
+      let bin = '';
+      for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+      const b64 = btoa(bin);
+      await client.fsWrite(name, ext, b64);
+      statusEl.textContent = 'Uploaded ' + name + '.' + ext;
+      if (onDone) onDone();
+      await loadDeviceInfo();
+    } catch (e){
+      statusEl.className = 'field-status err';
+      statusEl.textContent = 'Upload failed: ' + e.message;
+    }
+  }
+
+  /* ============================= User Apps ============================= */
+
+  async function refreshApps(){
+    const listEl = document.getElementById('apps-list');
+    listEl.innerHTML = '<div class="empty-msg">Loading&hellip;</div>';
+    try{
+      const res = await client.fsList();
+      const apps = (res.files || []).filter(f => f.ext === 'nsa' || f.ext === 'app');
+      appIconCache = {};
+      appNameCache = {};
+      // Reads each app's content up front (protocol is strictly one request at a
+      // time, so this is sequential) to decode its real embedded icon and display
+      // name for the list row -- fs.list only gives us the on-disk name.ext, not
+      // either of those.
+      for (const a of apps){
+        const key = a.name + '.' + a.ext;
+        try{
+          const fileRes = await client.fsRead(a.name, a.ext);
+          const text = base64ToUtf8(fileRes.data);
+          appIconCache[key] = decodeNsaIconToDataUrl(text);
+          appNameCache[key] = decodeNsaAppName(text, key);
+        } catch (e){
+          appIconCache[key] = null;
+          appNameCache[key] = key;
+        }
+      }
+      renderFileRows(listEl, apps, onAppSelect,
+        (f) => {
+          const src = appIconCache[f.name + '.' + f.ext];
+          return src ? '<img class="row-icon" src="' + src + '" alt="app icon">' : iconHtml(f.ext);
+        },
+        (f) => appNameCache[f.name + '.' + f.ext] || (f.name + '.' + f.ext)
+      );
+    } catch (e){
+      listEl.innerHTML = '<div class="empty-msg">Error: ' + e.message + '</div>';
+    }
+  }
+
+  async function onAppSelect(file){
+    const preview = document.getElementById('apps-preview');
+    preview.innerHTML = '<div class="preview-placeholder">Loading&hellip;</div>';
+    try{
+      const res = await client.fsRead(file.name, file.ext);
+      const bytes = base64ToBytes(res.data);
+      const key = res.name + '.' + res.ext;
+      const iconSrc = appIconCache[key];
+      const appName = appNameCache[key] || decodeNsaAppName(base64ToUtf8(res.data), key);
+      preview.innerHTML =
+        '<div class="preview-header">' +
+          (iconSrc ? '<img src="' + iconSrc + '" alt="app icon">' : iconHtml(res.ext)) +
+          '<div><div class="preview-name">' + escapeHtml(appName) + '</div>' +
+          '<div class="preview-size">' + escapeHtml(key) + ' &middot; ' + formatBytes(bytes.length) + '</div></div>' +
+        '</div>' +
+        '<div class="preview-body"><div class="preview-placeholder">Compiled app &mdash; no text preview.</div></div>' +
+        '<div style="margin-top:16px;"><button class="btn small" id="apps-preview-download-btn">Download</button></div>';
+      document.getElementById('apps-preview-download-btn').addEventListener('click', () => {
+        downloadBytes(bytes, res.name + '.' + res.ext);
+      });
+    } catch (e){
+      preview.innerHTML = '<div class="preview-placeholder">Error: ' + escapeHtml(e.message) + '</div>';
+    }
+  }
+
+  document.getElementById('apps-refresh-btn').addEventListener('click', refreshApps);
+  document.getElementById('apps-upload-btn').addEventListener('click', () => {
+    document.getElementById('apps-upload-input').click();
+  });
+  document.getElementById('apps-upload-input').addEventListener('change', (e) => {
+    handleUpload(e.target.files[0], 'apps-upload-status', refreshApps);
+    e.target.value = '';
+  });
+
+  /* ============================= Settings ============================= */
+
+  async function refreshSettings(){
+    const statusEl = document.getElementById('settings-status');
+    statusEl.className = 'field-status';
+    statusEl.textContent = 'Loading…';
+    try{
+      const res = await client.settingsList();
+      const s = res.settings || {};
+      document.querySelectorAll('#settings-list [data-field]').forEach(el => {
+        const field = el.dataset.field;
+        if (!(field in s)) return;
+        if (el.type === 'checkbox') el.checked = !!s[field];
+        else el.value = s[field];
+      });
+      const radioSel = document.getElementById('set-radioChannel');
+      if (!radioSel.options.length){
+        for (let i = 0; i <= 9; i++){
+          const opt = document.createElement('option');
+          opt.value = i; opt.textContent = i;
+          radioSel.appendChild(opt);
+        }
+      }
+      radioSel.value = s.radioChannel;
+
+      try{
+        const clockRes = await client.clockGet();
+        document.getElementById('set-hour').value = clockRes.hour;
+        document.getElementById('set-minute').value = clockRes.minute;
+      } catch (e){
+        document.getElementById('set-hour').value = '';
+        document.getElementById('set-minute').value = '';
+      }
+      statusEl.textContent = 'Loaded.';
+    } catch (e){
+      statusEl.className = 'field-status err';
+      statusEl.textContent = 'Error: ' + e.message;
+    }
+  }
+
+  document.getElementById('settings-refresh-btn').addEventListener('click', refreshSettings);
+
+  document.getElementById('settings-save-btn').addEventListener('click', async () => {
+    const statusEl = document.getElementById('settings-status');
+    statusEl.className = 'field-status';
+    statusEl.textContent = 'Saving…';
+    try{
+      for (const el of document.querySelectorAll('#settings-list [data-field]')){
+        const field = el.dataset.field;
+        const type = el.dataset.type;
+        let value;
+        if (type === 'bool') value = el.checked;
+        else if (type === 'int') value = parseInt(el.value, 10);
+        else value = el.value;
+        await client.settingsSet(field, value);
+      }
+      const hourVal = document.getElementById('set-hour').value;
+      const minuteVal = document.getElementById('set-minute').value;
+      if (hourVal !== '' && minuteVal !== ''){
+        await client.clockSet(parseInt(hourVal, 10), parseInt(minuteVal, 10));
+      }
+      statusEl.textContent = 'Saved.';
+    } catch (e){
+      statusEl.className = 'field-status err';
+      statusEl.textContent = 'Error: ' + e.message;
+    }
+  });
+
+  /* ============================= Backup ============================= */
+
+  document.getElementById('backup-download-btn').addEventListener('click', async () => {
+    const progress = document.getElementById('backup-progress');
+    try{
+      const backup = await collectDeviceBackup((msg) => { progress.textContent = msg; });
+      downloadBackupJson(backup);
+      progress.textContent = 'Backup downloaded.';
+    } catch (e){
+      progress.textContent = 'Error: ' + e.message;
+    }
+  });
+
+  document.getElementById('backup-download-zip-btn').addEventListener('click', async () => {
+    const progress = document.getElementById('backup-progress');
+    try{
+      progress.textContent = 'Listing files…';
+      const listRes = await client.fsList();
+      const files = listRes.files || [];
+      if (!files.length){
+        progress.textContent = 'No files or apps on this device.';
+        return;
+      }
+      const entries = [];
+      for (const f of files){
+        progress.textContent = 'Reading ' + f.name + '.' + f.ext + '…';
+        const fileRes = await client.fsRead(f.name, f.ext);
+        entries.push({ name: fileRes.name + '.' + fileRes.ext, data: base64ToBytes(fileRes.data) });
+      }
+      progress.textContent = 'Building zip…';
+      const zipBytes = buildZip(entries);
+      downloadBytes(zipBytes, 'microos-files-' + (deviceInfoCache && deviceInfoCache.serialNumber ? deviceInfoCache.serialNumber : 'device') + '.zip');
+      progress.textContent = 'Downloaded ' + entries.length + ' file(s) as a zip.';
+    } catch (e){
+      progress.textContent = 'Error: ' + e.message;
+    }
+  });
+
+  document.getElementById('backup-upload-btn').addEventListener('click', () => {
+    document.getElementById('backup-upload-input').click();
+  });
+
+  document.getElementById('backup-upload-input').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    const progress = document.getElementById('backup-progress');
+    try{
+      const text = await file.text();
+      const backup = JSON.parse(text);
+      await restoreDeviceBackup(backup, (msg) => { progress.textContent = msg; });
+      progress.textContent = 'Backup restored.';
+      await loadDeviceInfo();
+    } catch (e){
+      progress.textContent = 'Error restoring backup: ' + e.message;
+    }
+  });
+
+  document.getElementById('backup-wipe-btn').addEventListener('click', beginWipeReflash);
+
+  /* ---------- Advanced tab ---------- */
+
+  document.getElementById('advanced-github-url').textContent = MICROOS_REPO_URL;
+
+  document.getElementById('advanced-open-makecode-btn').addEventListener('click', () => {
+    window.open('https://makecode.microbit.org/#pub:gh/NotCryptid/MicroOS', '_blank', 'noopener');
+  });
+
+  document.getElementById('advanced-copy-url-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('advanced-copy-url-btn');
+    try{
+      await navigator.clipboard.writeText(MICROOS_REPO_URL);
+      const original = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = original; }, 1500);
+    } catch (e) { /* clipboard unavailable -- the URL is still selectable as plain text */ }
+  });
+
+  document.getElementById('advanced-flash-custom-btn').addEventListener('click', () => {
+    const proceed = window.confirm(
+      'This flashes an arbitrary .hex file you choose, with no backup taken and no compatibility checks. ' +
+      'Only do this with a build you trust. Continue?'
+    );
+    if (!proceed) return;
+    flashCustomHexFile();
+  });
+
+})();
+</script>
+</body>
+</html>
