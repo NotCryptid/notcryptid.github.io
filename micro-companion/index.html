@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="./favicon.png" type="image/png" sizes="32x32" />
+<link rel="icon" href="./micro-companion/favicon.png" type="image/png" sizes="32x32" />
 <title>Micro Companion</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -636,7 +636,7 @@
               <div class="info-row"><div class="label">RAM Usage</div><div class="value" id="dev-ram">&mdash;</div></div>
               <div class="info-row"><div class="label">CPU Clock Speed</div><div class="value" id="dev-cpu">&mdash;</div></div>
             </div>
-            <img class="microbit-image" src="./microbit.png" alt="micro:bit">
+            <img class="microbit-image" src="./micro-companion/microbit.png" alt="micro:bit">
           </div>
         </section>
 
@@ -1029,7 +1029,7 @@
   let appIconCache = {};
   let appNameCache = {};
 
-  const ICONS = { wrt: 'wrt.png', nsp: 'nsp.png', xcl: 'xcl.png' };
+  const ICONS = { wrt: './micro-companion/wrt.png', nsp: './micro-companion/nsp.png', xcl: './micro-companion/xcl.png' };
 
   function iconFor(ext){
     return ICONS[ext] || null;
