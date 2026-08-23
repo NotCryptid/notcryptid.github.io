@@ -819,6 +819,7 @@
 
 </div>
 
+<script src="./vendor/dapjs.umd.js"></script>
 <script>
 (function(){
   'use strict';
@@ -1186,6 +1187,7 @@
   }
 
   function resetToConnect(message){
+    stopDeviceInfoPolling();
     showView('connect');
     if (message){
       const errBox = document.getElementById('connect-error');
@@ -1206,7 +1208,12 @@
     } else {
       try{
         await loadDeviceInfo();
-        isLiteDevice = false;
+        /* Versions before 1.1.0 predate reliable support for this app's file/settings
+           protocol (the same cutoff isPreWipeWarningVersion uses for its "wipes data
+           on update" warning) -- treat them as lite regardless of how device.info
+           itself went, matching reenterAppAfterFlash's rule after a fresh flash. */
+        isLiteDevice = isPreWipeWarningVersion(deviceInfoCache.osVersion);
+        if (isLiteDevice) deviceInfoCache = null;
       } catch (e){
         /* Pinged fine but device.info still failed -- an unexpected in-between case
            (e.g. a partial/experimental protocol version). Fall back to lite mode
@@ -1281,6 +1288,25 @@
     document.getElementById('update-current-version').textContent = res.osVersion || '—';
   }
 
+  /** Keeps RAM/storage figures on the Device page live while it's open, instead of
+   *  only refreshing on connect/flash. A sleep()-based loop (matching the rest of
+   *  this file's polling style, e.g. waitForMicrobitReconnect) rather than
+   *  setInterval, so a slow device.info round-trip can't pile up overlapping calls. */
+  let deviceInfoPollActive = false;
+
+  async function startDeviceInfoPolling(){
+    if (deviceInfoPollActive) return;
+    deviceInfoPollActive = true;
+    while (deviceInfoPollActive){
+      try{ await loadDeviceInfo(); } catch (e){ /* device busy/mid-flash -- just retry next tick */ }
+      await sleep(1000);
+    }
+  }
+
+  function stopDeviceInfoPolling(){
+    deviceInfoPollActive = false;
+  }
+
   /* ---------- sidebar navigation ---------- */
 
   const navList = document.getElementById('nav-list');
@@ -1301,6 +1327,7 @@
     if (page === 'UserApps') refreshApps();
     if (page === 'Settings') refreshSettings();
     if (page === 'Update') loadUpdates();
+    if (page === 'Device') startDeviceInfoPolling(); else stopDeviceInfoPolling();
   }
 
   /* ============================= Update ============================= */
@@ -1536,6 +1563,41 @@
     triggerFileDownload(release.url, release.assetName);
   }
 
+  /** This app is served from the same origin as micro-companion/builds/, so unlike
+   *  GitHub release assets, a matching local build can be read straight off disk
+   *  with fetch() -- no CORS wall, no download-then-reselect dance. Checked first
+   *  by performAutomaticFlash/beginWipeReflash; falls back to the GitHub download
+   *  flow whenever this version hasn't been mirrored into builds/. */
+  const LOCAL_BUILDS_BASE = './builds/';
+  const LOCAL_BUILDS_MANIFEST_URL = LOCAL_BUILDS_BASE + 'index.json';
+  let localBuildVersions = null;
+
+  async function loadLocalBuildVersions(){
+    if (localBuildVersions) return localBuildVersions;
+    try{
+      const res = await fetch(LOCAL_BUILDS_MANIFEST_URL);
+      if (!res.ok) throw new Error('manifest fetch failed: ' + res.status);
+      const versions = await res.json();
+      localBuildVersions = new Set(versions);
+    } catch (e){
+      localBuildVersions = new Set();
+    }
+    return localBuildVersions;
+  }
+
+  async function fetchLocalHexBuild(tag){
+    const versions = await loadLocalBuildVersions();
+    const version = String(tag).replace(/^v/i, '');
+    if (!versions.has(version)) return null;
+    try{
+      const res = await fetch(LOCAL_BUILDS_BASE + version + '.hex');
+      if (!res.ok) return null;
+      return new Uint8Array(await res.arrayBuffer());
+    } catch (e){
+      return null;
+    }
+  }
+
   function promptForLocalHexFile(expectedFilename){
     return new Promise((resolve, reject) => {
       const input = document.getElementById('update-hex-file-input');
@@ -1593,6 +1655,69 @@
     await writable.close();
   }
 
+  /** ---------- WebUSB flashing: real DAPLink-over-USB flash, no MICROBIT drive/folder picker ----------
+   *  DAPLink boards (micro:bit included) implement a vendor-specific HID/WebUSB command
+   *  set (open/write/close/reset) that drives the exact same flash logic as drag-and-drop
+   *  onto the MICROBIT mass-storage drive, just over the debug USB interface instead of the
+   *  OS's filesystem layer. dapjs's DAPLink.flash() speaks that protocol directly, so this
+   *  needs a one-time WebUSB device-permission prompt (remembered by the browser afterward,
+   *  same as the WebSerial connect flow above) rather than a folder picker every time. */
+  let cachedWebUsbDevice = null;
+
+  function webUsbFlashAvailable(){
+    return !!(navigator.usb && window.DAPjs);
+  }
+
+  async function pickWebUsbDevice(){
+    if (!navigator.usb) throw new Error('WebUSB is not available in this browser.');
+    const known = await navigator.usb.getDevices();
+    if (cachedWebUsbDevice && known.includes(cachedWebUsbDevice)) return cachedWebUsbDevice;
+    const paired = known.find(d => d.vendorId === 0x0D28 && d.productId === 0x0204);
+    if (paired){
+      cachedWebUsbDevice = paired;
+      return paired;
+    }
+    const device = await navigator.usb.requestDevice({ filters: [{ vendorId: 0x0D28, productId: 0x0204 }] });
+    cachedWebUsbDevice = device;
+    return device;
+  }
+
+  async function flashViaWebUsb(hexBytes, onProgress){
+    const usbDevice = await pickWebUsbDevice();
+    const transport = new DAPjs.WebUSB(usbDevice);
+    const daplink = new DAPjs.DAPLink(transport);
+    if (onProgress) daplink.on(DAPjs.DAPLink.EVENT_PROGRESS, onProgress);
+    await daplink.connect();
+    try{
+      await daplink.flash(hexBytes.buffer);
+    } finally {
+      try { await daplink.disconnect(); } catch (e) { /* device is already resetting into the new image */ }
+    }
+  }
+
+  /** Writes hexBytes to the micro:bit, preferring the direct WebUSB flash above and
+   *  falling back to the MICROBIT drive-write approach when WebUSB isn't available
+   *  (unsupported browser, permission denied, mid-flash failure, etc). Callers must
+   *  already have disconnected the serial client before calling this. */
+  async function flashHexToDevice(hexBytes, assetName, label){
+    if (webUsbFlashAvailable()){
+      try{
+        updateFlashPanel(label + ': writing firmware…', 'Flashing ' + escapeHtml(assetName) + ' directly over USB. Do not unplug the device.');
+        await flashViaWebUsb(hexBytes, (pct) => {
+          const pctText = (typeof pct === 'number') ? ' (' + Math.round(pct * 100) + '%)' : '';
+          updateFlashPanel(label + ': writing firmware…', 'Flashing ' + escapeHtml(assetName) + ' over USB' + pctText + '. Do not unplug the device.');
+        });
+        return;
+      } catch (e){
+        logDebug('WebUSB flash failed (' + e.message + ') -- falling back to the MICROBIT drive.');
+      }
+    }
+    updateFlashPanel(label + ': select the MICROBIT drive', 'Choose the micro:bit\'s <strong>MICROBIT</strong> USB drive in the picker (only needed once per session).');
+    const dirHandle = await pickMicrobitDrive();
+    updateFlashPanel(label + ': writing firmware…', 'Copying ' + escapeHtml(assetName) + ' onto the MICROBIT drive. Do not unplug the device.');
+    await writeHexToDrive(dirHandle, hexBytes, assetName);
+  }
+
   /** After DAPLink reboots into the new image, the CDC serial interface drops and
    *  re-enumerates. navigator.serial.getPorts() returns ports already permitted to
    *  this origin without a new picker, so we poll it and re-ping until the device
@@ -1640,13 +1765,19 @@
    */
   /** Re-probes device.info after a flash and re-applies lite mode accordingly --
    *  a freshly-flashed build (an official downgrade, or a custom Advanced-tab
-   *  build) might support a different feature set than what was connected before. */
+   *  build) might support a different feature set than what was connected before.
+   *  Versions before MICROOS_WIPE_WARNING_BEFORE (1.1.0) are forced into lite mode
+   *  even when device.info itself succeeds -- isPreWipeWarningVersion's same "wipes
+   *  data on update" cutoff also marks the point before which this app's file/
+   *  settings protocol isn't reliably supported, so trusting a full response from
+   *  an older build would be optimistic rather than accurate. */
   async function reenterAppAfterFlash(){
     client.onDisconnect = handleDeviceDisconnect;
     showView('app');
     try{
       await loadDeviceInfo();
-      isLiteDevice = false;
+      isLiteDevice = isPreWipeWarningVersion(deviceInfoCache.osVersion);
+      if (isLiteDevice) deviceInfoCache = null;
     } catch (e){
       logDebug('device.info failed after flash (' + e.message + ') -- lite mode.');
       isLiteDevice = true;
@@ -1669,22 +1800,23 @@
         try { localStorage.setItem(PENDING_RESTORE_KEY, JSON.stringify(backup)); } catch (e) { /* storage unavailable */ }
       }
 
-      updateFlashPanel(label + ': downloading firmware…', 'Starting the download for ' + escapeHtml(release.assetName) + ' (' + escapeHtml(releaseLabel(release)) + ')&hellip;');
-      triggerHexDownload(release);
-      updateFlashPanel(
-        label + ': select the downloaded file',
-        'GitHub doesn\'t allow web pages to read release files directly, so this one click is unavoidable. ' +
-        'Once your browser finishes downloading <strong>' + escapeHtml(release.assetName) + '</strong>, click below and pick it from your Downloads folder.'
-      );
-      const hexBytes = await promptForLocalHexFile(release.assetName);
+      updateFlashPanel(label + ': preparing firmware…', 'Checking for a local build of ' + escapeHtml(releaseLabel(release)) + '&hellip;');
+      let hexBytes = await fetchLocalHexBuild(release.tag);
 
-      updateFlashPanel(label + ': select the MICROBIT drive', 'Choose the micro:bit\'s <strong>MICROBIT</strong> USB drive in the picker (only needed once per session).');
-      const dirHandle = await pickMicrobitDrive();
+      if (!hexBytes){
+        updateFlashPanel(label + ': downloading firmware…', 'Starting the download for ' + escapeHtml(release.assetName) + ' (' + escapeHtml(releaseLabel(release)) + ')&hellip;');
+        triggerHexDownload(release);
+        updateFlashPanel(
+          label + ': select the downloaded file',
+          'GitHub doesn\'t allow web pages to read release files directly, so this one click is unavoidable. ' +
+          'Once your browser finishes downloading <strong>' + escapeHtml(release.assetName) + '</strong>, click below and pick it from your Downloads folder.'
+        );
+        hexBytes = await promptForLocalHexFile(release.assetName);
+      }
 
-      updateFlashPanel(label + ': writing firmware…', 'Copying ' + escapeHtml(release.assetName) + ' onto the MICROBIT drive. Do not unplug the device.');
       client.onDisconnect = null; /* this disconnect is intentional — don't bounce back to the connect screen */
       await client.disconnect();
-      await writeHexToDrive(dirHandle, hexBytes, release.assetName);
+      await flashHexToDevice(hexBytes, release.assetName, label);
 
       updateFlashPanel(label + ': flashing…', 'The micro:bit is flashing itself and will reboot automatically.');
       const reconnected = await waitForMicrobitReconnect(90000, (secs) => {
@@ -1785,13 +1917,9 @@
       updateFlashPanel('Custom build: select your .hex file', 'Choose the .hex file you built or downloaded.');
       const hexBytes = await promptForLocalHexFile('.hex file');
 
-      updateFlashPanel('Custom build: select the MICROBIT drive', 'Choose the micro:bit\'s <strong>MICROBIT</strong> USB drive in the picker (only needed once per session).');
-      const dirHandle = await pickMicrobitDrive();
-
-      updateFlashPanel('Custom build: writing firmware…', 'Copying the custom build onto the MICROBIT drive. Do not unplug the device.');
       client.onDisconnect = null; /* this disconnect is intentional — don't bounce back to the connect screen */
       await client.disconnect();
-      await writeHexToDrive(dirHandle, hexBytes, 'custom-build.hex');
+      await flashHexToDevice(hexBytes, 'custom-build.hex', 'Custom build');
 
       updateFlashPanel('Custom build: flashing…', 'The micro:bit is flashing itself and will reboot automatically.');
       const reconnected = await waitForMicrobitReconnect(90000, (secs) => {
