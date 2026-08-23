@@ -722,6 +722,10 @@
               <label for="set-roomCode">Room Code</label>
               <input type="text" id="set-roomCode" data-field="roomCode" data-type="string">
             </div>
+            <div class="settings-row">
+              <label for="set-mcp">NanoCode MCP</label>
+              <input type="checkbox" id="set-mcp" data-field="mcp" data-type="bool">
+            </div>
           </div>
           <div class="settings-actions">
             <button class="btn" id="settings-save-btn">Save Settings</button>
@@ -973,7 +977,13 @@
           reject(err);
         });
       }).then((msg) => {
-        if (!msg.ok) throw new Error(msg.error || 'device error');
+        if (!msg.ok){
+          if (msg.error === 'serial USB disabled'){
+            throw new Error('Serial USB is turned off on this device. On the micro:bit, open ' +
+              'Settings → Connectivity → Serial USB and turn it back on, then reconnect here.');
+          }
+          throw new Error(msg.error || 'device error');
+        }
         return msg;
       });
     }
