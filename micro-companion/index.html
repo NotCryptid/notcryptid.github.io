@@ -958,6 +958,21 @@
       }
     }
 
+    /** Writes a whole request line in small chunks with a short pause between them.
+     *  The device's serial RX ring buffer is tiny (a few dozen bytes) and it only
+     *  drains it once per 20ms poll tick -- a single write() hands the whole line to
+     *  the OS which blasts it out over USB far faster than that, overflowing the
+     *  buffer and silently dropping bytes for anything beyond a trivial payload. That
+     *  showed up as base64 decode failures on writes big enough to matter (a whole
+     *  app's content) while short commands like ping happened to squeak through. */
+    async _writeThrottled(text){
+      const CHUNK = 32;
+      for (let i = 0; i < text.length; i += CHUNK){
+        await this.writer.write(text.slice(i, i + CHUNK));
+        if (i + CHUNK < text.length) await sleep(25);
+      }
+    }
+
     _sendOnce(cmd, params, timeoutMs){
       const id = this.nextId++;
       const payload = JSON.stringify(Object.assign({ id, cmd }, params)) + '\n';
@@ -972,7 +987,7 @@
           resolve: (msg) => { clearTimeout(timer); resolve(msg); },
           reject
         });
-        this.writer.write(payload).catch((err) => {
+        this._writeThrottled(payload).catch((err) => {
           clearTimeout(timer);
           this.pending.delete(id);
           reject(err);
@@ -999,7 +1014,7 @@
     ping(){ return this.send('ping', {}, 2000); }
     deviceInfo(){ return this.send('device.info'); }
     fsList(){ return this.send('fs.list'); }
-    fsRead(name, ext){ return this.send('fs.read', { name, ext }); }
+    fsRead(name, ext){ return this.send('fs.read', { name, ext }, 8000); }
     fsWrite(name, ext, base64data){ return this.send('fs.write', { name, ext, data: base64data }, 8000); }
     settingsList(){ return this.send('settings.list'); }
     settingsSet(field, value){ return this.send('settings.set', { field, value }); }
@@ -1039,6 +1054,7 @@
   let filesCache = [];
   let appIconCache = {};
   let appNameCache = {};
+  let appSizeCache = {};
 
   const ICONS = { wrt: './micro-companion/wrt.png', nsp: './micro-companion/nsp.png', xcl: './micro-companion/xcl.png' };
 
@@ -2284,22 +2300,35 @@
     try{
       const res = await client.fsList();
       const apps = (res.files || []).filter(f => f.ext === 'nsa' || f.ext === 'app');
-      appIconCache = {};
-      appNameCache = {};
       // Reads each app's content up front (protocol is strictly one request at a
       // time, so this is sequential) to decode its real embedded icon and display
       // name for the list row -- fs.list only gives us the on-disk name.ext, not
-      // either of those.
+      // either of those. Only fetched for apps we haven't already decoded (or whose
+      // size changed, meaning the file was overwritten) -- re-reading every app's
+      // full content on every refresh (e.g. right after each upload) piles up a lot
+      // of slow serial transfers and was making uploads from this page time out.
+      const seenKeys = new Set();
       for (const a of apps){
         const key = a.name + '.' + a.ext;
+        seenKeys.add(key);
+        if (appSizeCache[key] === a.size) continue;
         try{
           const fileRes = await client.fsRead(a.name, a.ext);
           const text = base64ToUtf8(fileRes.data);
           appIconCache[key] = decodeNsaIconToDataUrl(text);
           appNameCache[key] = decodeNsaAppName(text, key);
+          appSizeCache[key] = a.size;
         } catch (e){
           appIconCache[key] = null;
           appNameCache[key] = key;
+          delete appSizeCache[key];
+        }
+      }
+      for (const key in appSizeCache){
+        if (!seenKeys.has(key)){
+          delete appSizeCache[key];
+          delete appIconCache[key];
+          delete appNameCache[key];
         }
       }
       renderFileRows(listEl, apps, onAppSelect,
