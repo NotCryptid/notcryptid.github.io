@@ -2379,12 +2379,17 @@
     }
   }
 
-  /** NanoSDK 2026.x output is a "Compiled App" with a TXP line as its 4th header line;
-   *  NanoSDK 2027.1+ output is a "Packaged App" (raw text, 3-line header, no TXP). */
+  /** Both formats are "~"-separated: name~icon~submenu~titleX~body... .
+   *  NanoSDK 2026.x output is a "Compiled App": the body is numeric opcodes with "§"
+   *  separators (e.g. "301§s") and titleX is zero-padded to 3 digits ("020").
+   *  NanoSDK 2027.1+ output is a "Packaged App": the body is plain source lines
+   *  (e.g. "CLG scl") and titleX is unpadded ("12"). */
   function appKindLabel(text){
-    const lines = String(text).split('\n');
-    const hasTxp = lines.length > 3 && lines[3].trim().substr(0, 3).toUpperCase() === 'TXP';
-    return hasTxp ? 'Compiled App' : 'Packaged App';
+    const parts = String(text).split('~');
+    const body = parts.slice(4);
+    if (body.some(p => p.indexOf('§') >= 0)) return 'Compiled App';
+    if (body.length) return 'Packaged App';
+    return /^\d{3}$/.test((parts[3] || '').trim()) ? 'Compiled App' : 'Packaged App';
   }
 
   async function onAppSelect(file){
