@@ -2379,6 +2379,14 @@
     }
   }
 
+  /** NanoSDK 2026.x output is a "Compiled App" with a TXP line as its 4th header line;
+   *  NanoSDK 2027.1+ output is a "Packaged App" (raw text, 3-line header, no TXP). */
+  function appKindLabel(text){
+    const lines = String(text).split('\n');
+    const hasTxp = lines.length > 3 && lines[3].trim().substr(0, 3).toUpperCase() === 'TXP';
+    return hasTxp ? 'Compiled App' : 'Packaged App';
+  }
+
   async function onAppSelect(file){
     const preview = document.getElementById('apps-preview');
     preview.innerHTML = '<div class="preview-placeholder">Loading&hellip;</div>';
@@ -2394,7 +2402,7 @@
           '<div><div class="preview-name">' + escapeHtml(appName) + '</div>' +
           '<div class="preview-size">' + escapeHtml(key) + ' &middot; ' + formatBytes(bytes.length) + '</div></div>' +
         '</div>' +
-        '<div class="preview-body"><div class="preview-placeholder">Compiled app &mdash; no text preview.</div></div>' +
+        '<div class="preview-body"><div class="preview-placeholder">' + appKindLabel(base64ToUtf8(res.data)) + ' &mdash; no text preview.</div></div>' +
         '<div style="margin-top:16px;"><button class="btn small" id="apps-preview-download-btn">Download</button></div>';
       document.getElementById('apps-preview-download-btn').addEventListener('click', () => {
         downloadBytes(bytes, res.name + '.' + res.ext);
