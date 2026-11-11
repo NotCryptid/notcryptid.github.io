@@ -2385,11 +2385,9 @@
    *  NanoSDK 2027.1+ output is a "Packaged App": the body is plain source lines
    *  (e.g. "CLG scl") and titleX is unpadded ("12"). */
   function appKindLabel(text){
-    const parts = String(text).split('~');
-    const body = parts.slice(4);
-    if (body.some(p => p.indexOf('§') >= 0)) return 'Compiled App';
-    if (body.length) return 'Packaged App';
-    return /^\d{3}$/.test((parts[3] || '').trim()) ? 'Compiled App' : 'Packaged App';
+    // 2026.x always has the TXP as the 4th token: a plain 3-digit number (e.g. "020").
+    const fourth = (String(text).split('~')[3] || '').trim();
+    return /^\d{3}$/.test(fourth) ? 'Compiled App' : 'Packaged App';
   }
 
   async function onAppSelect(file){
