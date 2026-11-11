@@ -1729,7 +1729,27 @@
       }
     }
     updateFlashPanel(label + ': select the MICROBIT drive', 'Choose the micro:bit\'s <strong>MICROBIT</strong> USB drive in the picker (only needed once per session).');
-    const dirHandle = await pickMicrobitDrive();
+    // showDirectoryPicker needs a fresh user gesture, which is long gone by the time
+    // we get here (after downloads / failed WebUSB attempt), so wait for a button click.
+    let dirHandle = null;
+    if (cachedMicrobitDirHandle){
+      try{ dirHandle = await pickMicrobitDrive(); } catch (e) { dirHandle = null; }
+    }
+    if (!dirHandle){
+      dirHandle = await new Promise((resolve, reject) => {
+        updateFlashActions([{ label: 'Select MICROBIT drive', onClick: async () => {
+          try{
+            const h = await pickMicrobitDrive();
+            updateFlashActions([]);
+            resolve(h);
+          } catch (e){
+            if (e && e.name === 'AbortError') return; // picker cancelled; let them retry
+            updateFlashActions([]);
+            reject(e);
+          }
+        } }]);
+      });
+    }
     updateFlashPanel(label + ': writing firmware…', 'Copying ' + escapeHtml(assetName) + ' onto the MICROBIT drive. Do not unplug the device.');
     await writeHexToDrive(dirHandle, hexBytes, assetName);
   }
