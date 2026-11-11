@@ -1693,9 +1693,30 @@
       cachedWebUsbDevice = paired;
       return paired;
     }
-    const device = await navigator.usb.requestDevice({ filters: [{ vendorId: 0x0D28, productId: 0x0204 }] });
+    // requestDevice() needs a fresh user gesture; by now the click that started the flash
+    // has expired, so ask for a click. The pairing is remembered, so this is one-time.
+    const device = await runWithUserGesture('Pair micro:bit for flashing', () =>
+      navigator.usb.requestDevice({ filters: [{ vendorId: 0x0D28, productId: 0x0204 }] }));
     cachedWebUsbDevice = device;
     return device;
+  }
+
+  /** Shows a button in the flash panel and runs fn() inside its click handler (so browser
+   *  pickers get the user activation they require). Cancelling the picker keeps the button. */
+  function runWithUserGesture(buttonLabel, fn){
+    return new Promise((resolve, reject) => {
+      updateFlashActions([{ label: buttonLabel, onClick: async () => {
+        try{
+          const result = await fn();
+          updateFlashActions([]);
+          resolve(result);
+        } catch (e){
+          if (e && (e.name === 'AbortError' || e.name === 'NotFoundError')) return; // cancelled; allow retry
+          updateFlashActions([]);
+          reject(e);
+        }
+      } }]);
+    });
   }
 
   async function flashViaWebUsb(hexBytes, onProgress){
@@ -1718,7 +1739,7 @@
   async function flashHexToDevice(hexBytes, assetName, label){
     if (webUsbFlashAvailable()){
       try{
-        updateFlashPanel(label + ': writing firmware…', 'Flashing ' + escapeHtml(assetName) + ' directly over USB. Do not unplug the device.');
+        updateFlashPanel(label + ': connecting over USB…', 'If this is the first time, click the button and choose <strong>BBC micro:bit CMSIS-DAP</strong>. It is remembered afterward.');
         await flashViaWebUsb(hexBytes, (pct) => {
           const pctText = (typeof pct === 'number') ? ' (' + Math.round(pct * 100) + '%)' : '';
           updateFlashPanel(label + ': writing firmware…', 'Flashing ' + escapeHtml(assetName) + ' over USB' + pctText + '. Do not unplug the device.');
@@ -1736,19 +1757,7 @@
       try{ dirHandle = await pickMicrobitDrive(); } catch (e) { dirHandle = null; }
     }
     if (!dirHandle){
-      dirHandle = await new Promise((resolve, reject) => {
-        updateFlashActions([{ label: 'Select MICROBIT drive', onClick: async () => {
-          try{
-            const h = await pickMicrobitDrive();
-            updateFlashActions([]);
-            resolve(h);
-          } catch (e){
-            if (e && e.name === 'AbortError') return; // picker cancelled; let them retry
-            updateFlashActions([]);
-            reject(e);
-          }
-        } }]);
-      });
+      dirHandle = await runWithUserGesture('Select MICROBIT drive', pickMicrobitDrive);
     }
     updateFlashPanel(label + ': writing firmware…', 'Copying ' + escapeHtml(assetName) + ' onto the MICROBIT drive. Do not unplug the device.');
     await writeHexToDrive(dirHandle, hexBytes, assetName);
