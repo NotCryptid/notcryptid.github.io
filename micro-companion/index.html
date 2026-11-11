@@ -978,16 +978,23 @@
       const payload = JSON.stringify(Object.assign({ id, cmd }, params)) + '\n';
       logDebug('TX: ' + payload.trim());
       return new Promise((resolve, reject) => {
-        const timer = setTimeout(() => {
-          logDebug('TX id ' + id + ' (' + cmd + ') timed out after ' + timeoutMs + 'ms — no matching response received.');
-          this.pending.delete(id);
-          reject(new Error('timeout waiting for device response'));
-        }, timeoutMs);
+        /* The response timer only starts once the request has been fully written. The
+           throttled write alone takes ~0.8ms per byte (32-byte chunks, 25ms apart), so a
+           large upload used to burn its whole timeout just sending, then report a
+           timeout even though the device received and saved everything. */
+        let timer = null;
         this.pending.set(id, {
           resolve: (msg) => { clearTimeout(timer); resolve(msg); },
-          reject
+          reject: (err) => { clearTimeout(timer); reject(err); }
         });
-        this._writeThrottled(payload).catch((err) => {
+        this._writeThrottled(payload).then(() => {
+          if (!this.pending.has(id)) return; // response (or disconnect) already handled it
+          timer = setTimeout(() => {
+            logDebug('TX id ' + id + ' (' + cmd + ') timed out after ' + timeoutMs + 'ms — no matching response received.');
+            this.pending.delete(id);
+            reject(new Error('timeout waiting for device response'));
+          }, timeoutMs);
+        }).catch((err) => {
           clearTimeout(timer);
           this.pending.delete(id);
           reject(err);
@@ -1013,9 +1020,9 @@
 
     ping(){ return this.send('ping', {}, 2000); }
     deviceInfo(){ return this.send('device.info'); }
-    fsList(){ return this.send('fs.list'); }
-    fsRead(name, ext){ return this.send('fs.read', { name, ext }, 8000); }
-    fsWrite(name, ext, base64data){ return this.send('fs.write', { name, ext, data: base64data }, 8000); }
+    fsList(){ return this.send('fs.list', {}, 15000); }
+    fsRead(name, ext){ return this.send('fs.read', { name, ext }, 20000); }
+    fsWrite(name, ext, base64data){ return this.send('fs.write', { name, ext, data: base64data }, 15000); }
     settingsList(){ return this.send('settings.list'); }
     settingsSet(field, value){ return this.send('settings.set', { field, value }); }
     settingsGetRaw(key){ return this.send('settings.getRaw', { key }); }
